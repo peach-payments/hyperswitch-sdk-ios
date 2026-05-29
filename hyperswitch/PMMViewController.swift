@@ -54,9 +54,12 @@ class PaymentMethodManagementViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .green
+        view.backgroundColor = .systemBackground
         viewFrame()
-        //        hyperViewModel.preparePaymentMethodManagement()
+        // Kicks the fetch — on .success the widget gets installed by
+        // asyncBindPaymentManagementWidget; Hyperswitch.init also pushes
+        // creds into APIClient.shared so the PMM widget can read them.
+        hyperViewModel.preparePaymentSheet()
         asyncBindPaymentManagementWidget(onAddPaymentMethod: onAddPaymentMethod)
     }
 
@@ -67,8 +70,7 @@ class PaymentMethodManagementViewController: UIViewController {
         configuration.displaySavedPaymentMethods = false
 
         var appearance = PaymentSheet.Appearance()
-        appearance.colors.background = UIColor(red: 0.96, green: 0.97, blue: 0.98, alpha: 1.00)
-        appearance.primaryButton.cornerRadius = 32
+        
         configuration.appearance = appearance
 
         self.hyperViewModel.paymentSession?.presentPaymentSheet(

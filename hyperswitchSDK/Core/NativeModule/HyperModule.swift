@@ -70,11 +70,14 @@ internal class HyperModule: RCTEventEmitter {
 
     @objc
     private func exitPaymentsheet(_ reactTag: NSNumber, _ rnMessage: String, _ reset: Bool) {
-        let result = paymentResult(from: rnMessage)
-        withPaymentSheet(reactTag) { vc, sheet in
-            sheet?.completion?(result)
-            vc?.dismiss(animated: false, completion: nil)
-        }
+        // Delegate to exitSheet so the dismissal uses the cached
+        // RNViewManager.sharedInstance.rootView reference rather than a
+        // viewRegistry[reactTag] lookup that can return nil after a 3DS
+        // roundtrip — that lookup was leaving the full-screen sheet
+        // container undismissed on successful saved-card payments.
+        // The host's completion closure still fires via the
+        // RNResponseHandler conformance on PaymentSheet.
+        exitSheet(rnMessage)
     }
 
     @objc
@@ -261,14 +264,6 @@ internal class HyperModule: RCTEventEmitter {
             } else {
                 callback([true])
             }
-        }
-    }
-
-    @objc
-    private func openIframeBridge(_ url: String, _ timeoutMs: NSNumber, _ callback: @escaping RCTResponseSenderBlock) {
-        DispatchQueue.main.async {
-            let headlessWebView = HeadlessWebView(url: url, timeoutMs: timeoutMs, callback: callback)
-            headlessWebView.startFlow()
         }
     }
 

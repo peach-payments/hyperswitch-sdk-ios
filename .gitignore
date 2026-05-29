@@ -85,3 +85,9 @@ DummyApp.tar.gz
 .vscode/
 
 Gemfile.lock
+# --- Peach distribution (binaries live only in Release zips, not git) ---
+# The vendored xcframeworks are archived on the `vendor-frameworks` GitHub Release and the
+# reproducible ones are rebuilt by ios/build-lib.sh; the JS bundle is produced by `yarn bundle:ios`
+# in the parent monorepo. None of these are committed to this repo.
+**/*.xcframework
+hyperswitchSDK/Core/Resources/hyperswitch.bundle

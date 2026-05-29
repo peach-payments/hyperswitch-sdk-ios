@@ -1,4 +1,4 @@
-version = "0.5.4"
+version = "0.5.0"
 
 Pod::Spec.new do |s|
   s.name                      = 'hyperswitch-sdk-ios'
@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.platform                  = :ios
   s.ios.deployment_target     = '15.1'
   s.swift_version             = '5.0'
-  s.source                    = { :git => 'https://github.com/juspay/hyperswitch-sdk-ios.git', :tag => "v#{s.version}"}
+  s.source                    = { :http => "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v#{s.version}/hyperswitch-sdk-ios-#{s.version}.zip" }
   s.module_name               = 'Hyperswitch'
 
   s.subspec 'core' do |core|

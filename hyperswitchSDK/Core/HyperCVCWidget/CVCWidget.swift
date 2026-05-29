@@ -19,11 +19,7 @@ public class CVCWidget: UIControl {
 
     internal var paymentEventListener: PaymentEventListener?
 
-    public init(
-        hyperswitch: Hyperswitch,
-        configuration: PaymentSheet.Configuration? = nil,
-        subscribe: ((PaymentEventSubscriptionBuilder) -> Void)? = nil
-    ) {
+    public init(hyperswitch: Hyperswitch, configuration: PaymentSheet.Configuration? = nil, subscribe: ((PaymentEventSubscriptionBuilder) -> Void)? = nil) {
         self.hyperswitch = hyperswitch
         self.configuration = configuration
         self.configurationDict = nil
@@ -39,8 +35,7 @@ public class CVCWidget: UIControl {
     }
 
     //MARK: pass through
-    public init(hyperswitch: Hyperswitch, configurationDict: [String: Any]?, subscribe: ((PaymentEventSubscriptionBuilder) -> Void)? = nil)
-    {
+    public init(hyperswitch: Hyperswitch, configurationDict: [String: Any]?, subscribe: ((PaymentEventSubscriptionBuilder) -> Void)? = nil) {
         self.hyperswitch = hyperswitch
         self.configuration = nil
         self.configurationDict = configurationDict

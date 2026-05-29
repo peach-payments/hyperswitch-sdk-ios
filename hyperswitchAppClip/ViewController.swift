@@ -79,7 +79,7 @@ class ViewController: UIViewController {
     func openPaymentSheet(_ sender: Any) {
 
         var configuration = PaymentSheet.Configuration()
-        configuration.primaryButtonLabel = "Purchase ($2.00)"
+        configuration.primaryButtonLabel = "Pay Now"
         configuration.savedPaymentSheetHeaderLabel = "Payment methods"
         configuration.paymentSheetHeaderLabel = "Select payment method"
         configuration.displaySavedPaymentMethods = true
@@ -89,9 +89,7 @@ class ViewController: UIViewController {
         appearance.font.family = "bitcount single"
         appearance.font.sizeScaleFactor = 1.0
         appearance.shadow = .disabled
-        appearance.colors.background = UIColor(red: 0.96, green: 0.97, blue: 0.98, alpha: 1.00)
-        appearance.colors.primary = UIColor(red: 0.55, green: 0.74, blue: 0.00, alpha: 1.00)
-        appearance.primaryButton.cornerRadius = 32
+        
         configuration.appearance = appearance
 
         hyperViewModel.paymentSession?.presentPaymentSheetLite(

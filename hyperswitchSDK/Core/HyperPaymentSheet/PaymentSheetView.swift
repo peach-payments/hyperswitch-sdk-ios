@@ -31,7 +31,7 @@ internal extension PaymentSheet {
             "hyperswitchConfig": hyperswitchConfiguration as Any,
             "paymentSessionConfig": paymentSessionConfiguration as Any,
             "sdkParams": sdkParams,
-            "configuration": configuration as Any,
+            "configuration": configuration as Any
         ]
         /// Get the root view from the RNViewManager with the "hyperSwitch" module and the props dictionary.
         let rootView = RNViewManager.sharedInstance.viewForModule("hyperSwitch", initialProperties: ["props": props])
@@ -64,5 +64,27 @@ internal extension PaymentSheet {
 
         rootView.backgroundColor = UIColor.clear
         return rootView
+    }
+}
+
+/// PaymentSheet receives the JS-side completion ("success"/"failed"/"cancelled")
+/// via HyperModule.exitSheet -> RNViewManager.responseHandler. Without this
+/// conformance the user's `completion: { result in ... }` closure would never
+/// fire after the sheet's payment flow finishes, leaving the host app stuck
+/// because HyperUIViewController swallows all touches by design.
+extension PaymentSheet: RNResponseHandler {
+    func didReceiveResponse(response: String?, error: Error?) {
+        guard let completion = self.completion else { return }
+        // Clear before invoking so a callback that immediately re-presents the
+        // sheet doesn't accidentally fire twice.
+        self.completion = nil
+
+        if let error = error {
+            completion(.failed(error: error))
+        } else if response == "cancelled" {
+            completion(.canceled(data: "cancelled"))
+        } else {
+            completion(.completed(data: response ?? "failed"))
+        }
     }
 }

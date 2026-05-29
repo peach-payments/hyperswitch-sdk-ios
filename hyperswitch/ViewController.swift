@@ -12,6 +12,9 @@ import UIKit
 class ViewController: UIViewController {
 
     @ObservedObject var hyperViewModel = HyperViewModel()
+    private let environmentButton = UIButton(type: .system)
+    private let sessionIdTextField = UITextField()
+    private let inputStack = UIStackView()
     private var reloadButton = UIButton()
     private var reloadButtonConfiguration = UIButton.Configuration.plain()
     private var paymentSheetButton = UIButton()
@@ -50,7 +53,7 @@ class ViewController: UIViewController {
     func openPaymentSheet(_ sender: Any) {
 
         var configuration = PaymentSheet.Configuration()
-        configuration.primaryButtonLabel = "Purchase ($2.00)"
+        configuration.primaryButtonLabel = "Pay Now"
         configuration.savedPaymentSheetHeaderLabel = "Payment methods"
         configuration.paymentSheetHeaderLabel = "Select payment method"
         configuration.displaySavedPaymentMethods = true
@@ -59,9 +62,7 @@ class ViewController: UIViewController {
         appearance.font.base = UIFont(name: "montserrat", size: UIFont.systemFontSize)
         appearance.font.sizeScaleFactor = 1.0
         appearance.shadow = .disabled
-        appearance.colors.background = UIColor(red: 0.96, green: 0.97, blue: 0.98, alpha: 1.00)
-        appearance.colors.primary = UIColor(red: 0.55, green: 0.74, blue: 0.00, alpha: 1.00)
-        appearance.primaryButton.cornerRadius = 32
+        
         configuration.appearance = appearance
         if let netceteraApiKey = hyperViewModel.netceteraApiKey {
             configuration.netceteraSDKApiKey = netceteraApiKey
@@ -103,6 +104,46 @@ class ViewController: UIViewController {
         present(paymentMethodVC, animated: true)
     }
 
+    private func selectEnvironment(at index: Int) {
+        guard index != hyperViewModel.environmentIndex else { return }
+        hyperViewModel.environmentIndex = index
+        var config = environmentButton.configuration
+        config?.title = HyperViewModel.environments[index].label
+        environmentButton.configuration = config
+        environmentButton.menu = makeEnvironmentMenu()
+        hyperViewModel.fetchNetceteraSDKApiKey()
+        hyperViewModel.preparePaymentSheet()
+    }
+
+    private func makeEnvironmentMenu() -> UIMenu {
+        UIMenu(
+            title: "Environment",
+            children: HyperViewModel.environments.enumerated().map { (idx, env) in
+                UIAction(
+                    title: env.label,
+                    state: idx == hyperViewModel.environmentIndex ? .on : .off
+                ) { [weak self] _ in
+                    self?.selectEnvironment(at: idx)
+                }
+            }
+        )
+    }
+
+    @objc
+    private func sessionIdChanged(_ sender: UITextField) {
+        hyperViewModel.sessionId = sender.text ?? ""
+    }
+
+    private func configureTextField(_ field: UITextField, placeholder: String, text: String) {
+        field.placeholder = placeholder
+        field.text = text
+        field.borderStyle = .roundedRect
+        field.font = .systemFont(ofSize: 14)
+        field.clearButtonMode = .whileEditing
+        field.returnKeyType = .done
+        field.delegate = self
+    }
+
     @objc
     func reload(_ sender: Any) {
         hyperViewModel.fetchNetceteraSDKApiKey()
@@ -120,9 +161,45 @@ class ViewController: UIViewController {
     }
 }
 
+extension ViewController: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+}
+
 extension ViewController {
 
     func viewFrame() {
+        let currentLabel = HyperViewModel.environments[hyperViewModel.environmentIndex].label
+        var envConfig = UIButton.Configuration.bordered()
+        envConfig.title = currentLabel
+        envConfig.image = UIImage(systemName: "chevron.down")
+        envConfig.imagePlacement = .trailing
+        envConfig.imagePadding = 6
+        envConfig.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
+        environmentButton.configuration = envConfig
+        environmentButton.menu = makeEnvironmentMenu()
+        environmentButton.showsMenuAsPrimaryAction = true
+        environmentButton.changesSelectionAsPrimaryAction = false
+
+        configureTextField(sessionIdTextField, placeholder: "Session ID (optional)", text: hyperViewModel.sessionId)
+        sessionIdTextField.autocapitalizationType = .none
+        sessionIdTextField.autocorrectionType = .no
+        sessionIdTextField.addTarget(self, action: #selector(sessionIdChanged(_:)), for: .editingChanged)
+
+        inputStack.axis = .horizontal
+        inputStack.spacing = 8
+        inputStack.distribution = .fill
+        inputStack.addArrangedSubview(environmentButton)
+        inputStack.addArrangedSubview(sessionIdTextField)
+        environmentButton.widthAnchor.constraint(equalTo: sessionIdTextField.widthAnchor).isActive = true
+        view.addSubview(inputStack)
+        inputStack.translatesAutoresizingMaskIntoConstraints = false
+        inputStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20).isActive = true
+        inputStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
+        inputStack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20).isActive = true
+
         reloadButton.setTitle("Reload Client Secret", for: .normal)
         reloadButton.setTitleColor(.white, for: .normal)
         reloadButtonConfiguration.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)
@@ -134,7 +211,7 @@ extension ViewController {
         reloadButton.translatesAutoresizingMaskIntoConstraints = false
         reloadButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 60).isActive = true
         reloadButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -60).isActive = true
-        reloadButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 80).isActive = true
+        reloadButton.topAnchor.constraint(equalTo: inputStack.bottomAnchor, constant: 20).isActive = true
 
         paymentSheetButton.setTitle("Launch Payment Sheet", for: .normal)
         paymentSheetButton.setTitleColor(.white, for: .normal)

@@ -10,7 +10,7 @@ public enum CustomEndpointConfiguration: Codable {
     case overrideEndpoints(OverrideEndpointConfiguration)
 
     private enum CodingKeys: String, CodingKey {
-        case commonEndpoint
+        case customEndpoint
         case overrideEndpoints
     }
 
@@ -18,7 +18,7 @@ public enum CustomEndpointConfiguration: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         switch self {
         case .commonEndpoint(let value):
-            try container.encode(value, forKey: .commonEndpoint)
+            try container.encode(value, forKey: .customEndpoint)
         case .overrideEndpoints(let config):
             try container.encode(config, forKey: .overrideEndpoints)
         }
@@ -26,7 +26,7 @@ public enum CustomEndpointConfiguration: Codable {
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        if let value = try container.decodeIfPresent(String.self, forKey: .commonEndpoint) {
+        if let value = try container.decodeIfPresent(String.self, forKey: .customEndpoint) {
             self = .commonEndpoint(value)
         } else if let config = try container.decodeIfPresent(OverrideEndpointConfiguration.self, forKey: .overrideEndpoints) {
             self = .overrideEndpoints(config)

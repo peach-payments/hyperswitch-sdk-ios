@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.platform                  = :ios
   s.ios.deployment_target     = '15.1'
   s.swift_version             = '5.0'
-  s.source                    = { :git => 'https://github.com/juspay/hyperswitch-sdk-ios.git', :tag => "v#{s.version}"}
+  s.source                    = { :http => "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v#{s.version}/hyperswitch-sdk-ios-#{s.version}.zip" }
   s.module_name               = 'HyperswitchAuthentication'
 
   s.subspec 'core' do |core|
@@ -20,19 +20,16 @@ Pod::Spec.new do |s|
   end
 
   s.subspec 'netcetera3ds' do |netcetera3ds|
-    netcetera3ds.vendored_frameworks = 'frameworkgen/3ds/Frameworks/Netcetera/*.xcframework'
+    netcetera3ds.source_files = 'frameworkgen/3ds/Source/**/*.{m,swift,h}'
+    netcetera3ds.vendored_frameworks = 'frameworkgen/3ds/Frameworks/ThreeDS_SDK.xcframework'
     netcetera3ds.dependency 'hyperswitch-sdk-ios-authentication/core'
   end
 
-  s.subspec 'trident' do |trident|
-    trident.dependency 'hyperswitch-sdk-ios-authentication/core'
-    trident.dependency 'Trident3DS', '1.0.5'
-  end
-
-  s.subspec 'cardinal' do |cardinal|
-    cardinal.dependency 'hyperswitch-sdk-ios-authentication/core'
-    cardinal.dependency 'CardinalMobile', '3.0.0-2'
-  end
+  # NOTE: the `trident` and `cardinal` subspecs were dropped from this fork. Their providers
+  # (TridentProvider.swift / CardinalProvider.swift) compile via `#if canImport(...)` guards, so
+  # `core` builds without them, but the external pods Trident3DS / CardinalMobile are not on the
+  # CocoaPods CDN. Re-add the subspecs (and have consumers add the vendor spec sources) if those
+  # 3DS providers are shipped.
 
   s.subspec 'common' do |common|
     common.source_files = 'hyperswitchSDK/Shared/**/*.{m,swift,h}'

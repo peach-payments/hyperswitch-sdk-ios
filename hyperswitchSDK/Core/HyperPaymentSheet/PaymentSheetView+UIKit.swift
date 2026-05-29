@@ -19,6 +19,10 @@ internal extension PaymentSheet {
     ) {
 
         self.completion = completion
+        // PaymentSheet conforms to RNResponseHandler — installing it here is
+        // what lets HyperModule.exitSheet dispatch the JS result back to the
+        // host app's `completion: { result in ... }` closure.
+        RNViewManager.sharedInstance.responseHandler = self
 
         let paymentSheetViewController = HyperUIViewController()
         paymentSheetViewController.paymentSheet = self
