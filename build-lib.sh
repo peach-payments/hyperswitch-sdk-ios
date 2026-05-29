@@ -76,8 +76,8 @@ lockstep_version() {        # $1 = podspec path
         rm -f "${1}.bak"
     fi
 }
-lockstep_version "hyperswitch-sdk-ios-lite.podspec"
-lockstep_version "hyperswitch-sdk-ios-authentication.podspec"
+lockstep_version "peachpayments-hyperswitch-ios-lite.podspec"
+lockstep_version "peachpayments-hyperswitch-ios-authentication.podspec"
 
 VERSION_SWIFT="hyperswitchSDK/Shared/Version.swift"
 if [ -f "$VERSION_SWIFT" ]; then
