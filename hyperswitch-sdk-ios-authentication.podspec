@@ -1,4 +1,4 @@
-version = "0.1.0"
+version = "0.5.0"
 
 Pod::Spec.new do |s|
   s.name                      = 'hyperswitch-sdk-ios-authentication'
@@ -20,7 +20,10 @@ Pod::Spec.new do |s|
   end
 
   s.subspec 'netcetera3ds' do |netcetera3ds|
-    netcetera3ds.source_files = 'frameworkgen/3ds/Source/**/*.{m,swift,h}'
+    # Only vendor the ThreeDS_SDK binary here. The React-Native bridge sources in
+    # frameworkgen/3ds/Source belong to the MAIN pod's netcetera3ds subspec (they import
+    # React headers); this authentication pod is React-free and reaches ThreeDS_SDK via the
+    # `#if canImport(ThreeDS_SDK)`-guarded NetceteraProvider in `core`.
     netcetera3ds.vendored_frameworks = 'frameworkgen/3ds/Frameworks/ThreeDS_SDK.xcframework'
     netcetera3ds.dependency 'hyperswitch-sdk-ios-authentication/core'
   end
