@@ -87,14 +87,29 @@ fi
 echo "==> Building JS bundle (yarn bundle:ios)"
 ( cd "$REPO_ROOT" && yarn bundle:ios )
 
-# ----- 3. rebuild reproducible xcframeworks (Core/Sentry/PayPal) -------------------------------
-echo "==> Rebuilding xcframeworks (frameworkgen)"
-(
-    cd "$SCRIPT_DIR/frameworkgen"
-    ./scripts/archive.sh iphoneos
-    ./scripts/archive.sh iphonesimulator
-    ./scripts/framework.sh
-)
+# ----- 3. (optional) rebuild reproducible xcframeworks (Core/Sentry/PayPal) --------------------
+# These only change on a React Native / Sentry / PayPal bump, and the rebuild needs xcodegen +
+# pod install to materialise frameworkgen/DummyApp.xcworkspace first. So the rebuild is OPT-IN:
+# by default we ship the xcframeworks already on disk. Set REBUILD_XCFRAMEWORKS=1 to regenerate.
+if [ "${REBUILD_XCFRAMEWORKS:-0}" = "1" ]; then
+    echo "==> Rebuilding xcframeworks (frameworkgen)"
+    require xcodegen
+    (
+        cd "$SCRIPT_DIR/frameworkgen"
+        xcodegen generate                 # project.yml -> DummyApp.xcodeproj
+        bundle exec pod install           # -> DummyApp.xcworkspace (archive.sh needs this)
+        ./scripts/archive.sh iphoneos
+        ./scripts/archive.sh iphonesimulator
+        ./scripts/framework.sh
+    )
+else
+    echo "==> Using on-disk xcframeworks (set REBUILD_XCFRAMEWORKS=1 to regenerate)"
+    for d in Core Sentry PayPal; do
+        count=$(ls -d "frameworkgen/Frameworks/$d"/*.xcframework 2>/dev/null | wc -l | tr -d ' ')
+        [ "$count" -gt 0 ] || { echo "ERROR: no xcframeworks in frameworkgen/Frameworks/$d — run with REBUILD_XCFRAMEWORKS=1."; exit 1; }
+        echo "    frameworkgen/Frameworks/$d: $count xcframework(s)"
+    done
+fi
 
 # ----- 4. fetch the non-reproducible vendored xcframeworks ------------------------------------
 # ThreeDS_SDK + HyperswitchScanCard are vendored binaries; pull them from the vendor-frameworks
