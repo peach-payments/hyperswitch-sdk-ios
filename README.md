@@ -3,14 +3,17 @@
 ## Usage 
 
 ```ruby
-pod 'hyperswitch-sdk-ios'
+source 'https://github.com/peach-payments/hyperswitch-sdk-ios.git'
+source 'https://cdn.cocoapods.org/'
+
+pod 'peachpayments-hyperswitch-ios'
 ```
 
 ## Subspecs
 
 ```ruby
-pod 'hyperswitch-sdk-ios/scancard'
-pod 'hyperswitch-sdk-ios', :subspecs => ['subspec1', 'subspec2']
+pod 'peachpayments-hyperswitch-ios/scancard'
+pod 'peachpayments-hyperswitch-ios', :subspecs => ['subspec1', 'subspec2']
 ```
 
 This repository hosts the essential components of the Hyperswitch SDK iOS, it is a submodule repo for [hyperswitch-client-core](https://github.com/juspay/hyperswitch-client-core), in order to complete the setup please clone hyperswitch-client-core and follow the instruction given in the README.

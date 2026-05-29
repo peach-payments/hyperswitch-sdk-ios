@@ -29,12 +29,15 @@ SPEC_REPO_URL="https://github.com/${FORK_SLUG}.git"
 # pulls them when assembling the zip.
 VENDOR_FRAMEWORKS_TAG="${VENDOR_FRAMEWORKS_TAG:-vendor-frameworks}"
 
+# Pod names are peach-prefixed to avoid colliding with juspay's identically-named pods on the
+# public CocoaPods CDN (theirs are at higher versions and would otherwise win resolution). The
+# Release zip + GitHub repo keep the hyperswitch-sdk-ios name — that's the repo, not the pod.
 PODSPECS=(
-    "hyperswitch-sdk-ios.podspec"
-    "hyperswitch-sdk-ios-lite.podspec"
-    "hyperswitch-sdk-ios-authentication.podspec"
+    "peachpayments-hyperswitch-ios.podspec"
+    "peachpayments-hyperswitch-ios-lite.podspec"
+    "peachpayments-hyperswitch-ios-authentication.podspec"
 )
-MAIN_PODSPEC="hyperswitch-sdk-ios.podspec"
+MAIN_PODSPEC="peachpayments-hyperswitch-ios.podspec"
 POD="bundle exec pod"
 
 # ----- helpers ---------------------------------------------------------------------------------

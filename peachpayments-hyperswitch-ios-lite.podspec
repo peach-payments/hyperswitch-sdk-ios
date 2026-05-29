@@ -1,7 +1,7 @@
 version = "0.5.0"
 
 Pod::Spec.new do |s|
-  s.name                      = 'hyperswitch-sdk-ios-lite'
+  s.name                      = 'peachpayments-hyperswitch-ios-lite'
   s.version                   =  version
   s.summary                   = 'Hyperswitch SDK Lite'
   s.description               = 'Core of Hyperswitch SDK Lite an open-source payments switch'
@@ -16,12 +16,12 @@ Pod::Spec.new do |s|
 
   s.subspec 'core' do |core|
     core.source_files = 'hyperswitchSDK/CoreLite/*.{m,swift,h}'
-    core.dependency 'hyperswitch-sdk-ios-lite/common'
+    core.dependency 'peachpayments-hyperswitch-ios-lite/common'
   end
 
   s.subspec 'scancard' do |scancard|
     scancard.vendored_frameworks = 'frameworkgen/scanCard/Frameworks/*.xcframework'
-    scancard.dependency 'hyperswitch-sdk-ios-lite/core'
+    scancard.dependency 'peachpayments-hyperswitch-ios-lite/core'
   end
 
   s.subspec 'common' do |common|

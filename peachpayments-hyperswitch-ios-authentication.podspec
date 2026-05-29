@@ -1,7 +1,7 @@
 version = "0.5.0"
 
 Pod::Spec.new do |s|
-  s.name                      = 'hyperswitch-sdk-ios-authentication'
+  s.name                      = 'peachpayments-hyperswitch-ios-authentication'
   s.version                   =  version
   s.summary                   = 'Hyperswitch Authentication SDK'
   s.description               = 'Authentication module for Hyperswitch SDK - handles 3DS authentication flows'
@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
 
   s.subspec 'core' do |core|
     core.source_files = 'hyperswitchSDK/AuthenticationModule/**/*.{m,swift,h}'
-    core.dependency 'hyperswitch-sdk-ios-authentication/common'
+    core.dependency 'peachpayments-hyperswitch-ios-authentication/common'
   end
 
   s.subspec 'netcetera3ds' do |netcetera3ds|
@@ -25,7 +25,7 @@ Pod::Spec.new do |s|
     # React headers); this authentication pod is React-free and reaches ThreeDS_SDK via the
     # `#if canImport(ThreeDS_SDK)`-guarded NetceteraProvider in `core`.
     netcetera3ds.vendored_frameworks = 'frameworkgen/3ds/Frameworks/ThreeDS_SDK.xcframework'
-    netcetera3ds.dependency 'hyperswitch-sdk-ios-authentication/core'
+    netcetera3ds.dependency 'peachpayments-hyperswitch-ios-authentication/core'
   end
 
   # NOTE: the `trident` and `cardinal` subspecs were dropped from this fork. Their providers
