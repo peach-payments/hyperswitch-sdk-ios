@@ -186,7 +186,10 @@ extension WebViewController: WKScriptMessageHandler {
                         let errorDomain = jsonDictionary["code"] ?? "UNKNOWN_ERROR"
                         let errorMessage = jsonDictionary["message"] ?? "An error has occurred."
                         let error = NSError(domain: errorDomain, code: 0, userInfo: ["message": errorMessage])
-                        result = .failed(error: error)
+                        // The RN layer attaches an up-to-date payment intent (stringified JSON) on
+                        // genuine payment failures; forward it to the host when present.
+                        let paymentIntent = jsonDictionary["paymentIntent"].flatMap { $0.isEmpty ? nil : $0 }
+                        result = .failed(error: error, paymentIntent: paymentIntent)
                     case "cancelled":
                         result = .canceled(data: jsonDictionary["message"] ?? "Payment was canceled")
                     default:

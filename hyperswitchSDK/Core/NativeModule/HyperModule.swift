@@ -88,6 +88,44 @@ internal class HyperModule: RCTEventEmitter {
         }
     }
 
+    /// Result of a standalone wallet button payment (ApplePayButton /
+    /// ExpressCheckoutButton). `widgetType` is what Android routes on; here the
+    /// reactTag identifies the embedded view instance directly.
+    @objc
+    private func exitWidget(_ reactTag: NSNumber, _ rnMessage: String, _ widgetType: String) {
+        let result = paymentResult(from: rnMessage)
+        withWalletButton(reactTag) { button in
+            button.handleWalletPaymentResult(result)
+        }
+    }
+
+    /// The JS layer reports the height its content needs so an express row with
+    /// several wallets isn't clipped to a single button's height.
+    @objc
+    private func updateWidgetHeight(_ widgetType: String, _ height: NSNumber) {
+        // No reactTag in this call, so resize every mounted wallet button of this
+        // type — a host embeds at most one of each.
+        RCTGetUIManagerQueue().async {
+            self.bridge.uiManager.addUIBlock { _, viewRegistry in
+                guard let views = viewRegistry?.values else { return }
+                let matches = views.compactMap { view -> WalletButtonBase? in
+                    var current: UIView? = view
+                    while let v = current {
+                        if let button = v as? WalletButtonBase { return button }
+                        current = v.superview
+                    }
+                    return nil
+                }
+                let unique = matches.reduce(into: [WalletButtonBase]()) { acc, button in
+                    if !acc.contains(where: { $0 === button }) { acc.append(button) }
+                }
+                DispatchQueue.main.async {
+                    unique.forEach { $0.updateHeight(CGFloat(height.doubleValue)) }
+                }
+            }
+        }
+    }
+
     private func paymentResult(from rnMessage: String) -> PaymentResult {
         guard let data = rnMessage.data(using: .utf8) else {
             return .failed(
@@ -118,7 +156,10 @@ internal class HyperModule: RCTEventEmitter {
                     code: 0,
                     userInfo: ["message": jsonDictionary["message"] ?? "An error has occurred."]
                 )
-                return .failed(error: error)
+                // The RN layer attaches an up-to-date payment intent (stringified JSON) on
+                // genuine payment failures; forward it to the host when present.
+                let paymentIntent = jsonDictionary["paymentIntent"].flatMap { $0.isEmpty ? nil : $0 }
+                return .failed(error: error, paymentIntent: paymentIntent)
             } else if status == "cancelled" {
                 return .canceled(data: "cancelled")
             } else {
@@ -158,6 +199,8 @@ internal class HyperModule: RCTEventEmitter {
                 widget.dispatchPaymentEvent(type: eventType, payload: map)
             } else if let cvc = target as? CVCWidget, cvc.paymentEventListener != nil {
                 cvc.dispatchPaymentEvent(type: eventType, payload: map)
+            } else if let walletButton = target as? WalletButtonBase, walletButton.paymentEventListener != nil {
+                walletButton.dispatchPaymentEvent(type: eventType, payload: map)
             } else if let sheet = target as? PaymentSheet, sheet.paymentEventListener != nil {
                 sheet.dispatchPaymentEvent(type: eventType, payload: map)
             }
@@ -175,10 +218,17 @@ internal class HyperModule: RCTEventEmitter {
                     let status = jsonDictionary["status"]
 
                     if status == "failed" || status == "requires_payment_method" {
+                        var userInfo: [String: Any] = ["message": jsonDictionary["message"] ?? "An error has occurred."]
+                        // The RN layer attaches an up-to-date payment intent (stringified JSON) on
+                        // genuine payment failures. Carry it on the error's userInfo so the
+                        // RNResponseHandler can surface it as PaymentResult.failed(paymentIntent:).
+                        if let paymentIntent = jsonDictionary["paymentIntent"], !paymentIntent.isEmpty {
+                            userInfo["payment_intent"] = paymentIntent
+                        }
                         error = NSError(
                             domain: (jsonDictionary["code"] ?? "") != "" ? jsonDictionary["code"]! : "UNKNOWN_ERROR",
                             code: 0,
-                            userInfo: ["message": jsonDictionary["message"] ?? "An error has occurred."]
+                            userInfo: userInfo
                         )
                     } else {
                         response = status
@@ -215,10 +265,17 @@ internal class HyperModule: RCTEventEmitter {
                     let status = jsonDictionary["status"]
 
                     if status == "failed" || status == "requires_payment_method" {
+                        var userInfo: [String: Any] = ["message": jsonDictionary["message"] ?? "An error has occurred."]
+                        // The RN layer attaches an up-to-date payment intent (stringified JSON) on
+                        // genuine payment failures. Carry it on the error's userInfo so the
+                        // RNResponseHandler can surface it as PaymentResult.failed(paymentIntent:).
+                        if let paymentIntent = jsonDictionary["paymentIntent"], !paymentIntent.isEmpty {
+                            userInfo["payment_intent"] = paymentIntent
+                        }
                         error = NSError(
                             domain: (jsonDictionary["code"] ?? "") != "" ? jsonDictionary["code"]! : "UNKNOWN_ERROR",
                             code: 0,
-                            userInfo: ["message": jsonDictionary["message"] ?? "An error has occurred."]
+                            userInfo: userInfo
                         )
                     } else {
                         response = status
@@ -267,6 +324,22 @@ internal class HyperModule: RCTEventEmitter {
         }
     }
 
+    private func withWalletButton(_ rootTag: NSNumber, _ block: @escaping (WalletButtonBase) -> Void) {
+        RCTGetUIManagerQueue().async {
+            self.bridge.uiManager.addUIBlock { _, viewRegistry in
+                guard let view = viewRegistry?[rootTag] else { return }
+                var current: UIView? = view
+                while let v = current {
+                    if let button = v as? WalletButtonBase {
+                        DispatchQueue.main.async { block(button) }
+                        return
+                    }
+                    current = v.superview
+                }
+            }
+        }
+    }
+
     private func withWidget(_ rootTag: NSNumber, _ block: @escaping (PaymentWidget) -> Void) {
         RCTGetUIManagerQueue().async {
             self.bridge.uiManager.addUIBlock { _, viewRegistry in
@@ -292,7 +365,7 @@ internal class HyperModule: RCTEventEmitter {
                 }
                 var current: UIView? = view
                 while let v = current {
-                    if v is PaymentWidget || v is CVCWidget {
+                    if v is PaymentWidget || v is CVCWidget || v is WalletButtonBase {
                         DispatchQueue.main.async { block(v) }
                         return
                     }

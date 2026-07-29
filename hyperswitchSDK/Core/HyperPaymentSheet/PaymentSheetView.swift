@@ -80,7 +80,8 @@ extension PaymentSheet: RNResponseHandler {
         self.completion = nil
 
         if let error = error {
-            completion(.failed(error: error))
+            let paymentIntent = (error as NSError).userInfo["payment_intent"] as? String
+            completion(.failed(error: error, paymentIntent: paymentIntent))
         } else if response == "cancelled" {
             completion(.canceled(data: "cancelled"))
         } else {

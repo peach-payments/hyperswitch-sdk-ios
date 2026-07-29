@@ -31,6 +31,8 @@ class WidgetViewController: UIViewController {
     private var cancellables = Set<AnyCancellable>()
     private var paymentWidget: PaymentWidget?
     private var cvcWidget: CVCWidget?
+    private var applePayButton: ApplePayButton?
+    private var expressCheckoutButton: ExpressCheckoutButton?
     private var confirmButton = UIButton()
     private var confirmButtonConfiguration = UIButton.Configuration.plain()
 
@@ -113,7 +115,7 @@ class WidgetViewController: UIViewController {
         case .canceled(let data):
             print(["type": "canceled", "message": data])
             self.statusLabel.text = "canceled → \(data)"
-        case .failed(let error):
+        case .failed(let error, _):
             print(["type": "failed", "message": "\(error)"])
             self.statusLabel.text = "failed → \(error)"
         }
@@ -146,7 +148,7 @@ class WidgetViewController: UIViewController {
                 case .canceled(let data):
                     print(["type": "canceled", "message": data])
                     self.statusLabel.text = "canceled → \(data)"
-                case .failed(let error):
+                case .failed(let error, _):
                     print(["type": "failed", "message": "\(error)"])
                     self.statusLabel.text = "failed → \(error)"
                 }
@@ -221,11 +223,57 @@ class WidgetViewController: UIViewController {
                     elementConfirmButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 60).isActive = true
                     elementConfirmButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -60).isActive = true
                     elementConfirmButton.topAnchor.constraint(equalTo: paymentWidget.bottomAnchor, constant: 20).isActive = true
-                    elementConfirmButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10).isActive = true
                     elementConfirmButton.addTarget(self, action: #selector(confirmElement(_:)), for: .touchUpInside)
+
+                    attachWalletButtons(paymentSession: paymentSession, configuration: configuration)
                 }
             }
         }
+    }
+
+    /// Standalone wallet buttons: no sheet, no confirm button of our own. The
+    /// customer taps the branded button itself.
+    private func attachWalletButtons(
+        paymentSession: PaymentSession,
+        configuration: PaymentSheet.Configuration
+    ) {
+        let handleResult: (String) -> (PaymentResult) -> Void = { label in
+            { [weak self] paymentResult in
+                switch paymentResult {
+                case .completed(let data):
+                    self?.statusLabel.text = "\(label) completed → \(data)"
+                case .canceled(let data):
+                    self?.statusLabel.text = "\(label) canceled → \(data)"
+                case .failed(let error, _):
+                    self?.statusLabel.text = "\(label) failed → \(error)"
+                }
+            }
+        }
+
+        let applePayButton = ApplePayButton(
+            paymentSession: paymentSession,
+            configuration: configuration,
+            completion: handleResult("applePay")
+        )
+        self.applePayButton = applePayButton
+        contentView.addSubview(applePayButton)
+        applePayButton.translatesAutoresizingMaskIntoConstraints = false
+        applePayButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20).isActive = true
+        applePayButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20).isActive = true
+        applePayButton.topAnchor.constraint(equalTo: elementConfirmButton.bottomAnchor, constant: 20).isActive = true
+
+        let expressCheckoutButton = ExpressCheckoutButton(
+            paymentSession: paymentSession,
+            configuration: configuration,
+            completion: handleResult("expressCheckout")
+        )
+        self.expressCheckoutButton = expressCheckoutButton
+        contentView.addSubview(expressCheckoutButton)
+        expressCheckoutButton.translatesAutoresizingMaskIntoConstraints = false
+        expressCheckoutButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20).isActive = true
+        expressCheckoutButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20).isActive = true
+        expressCheckoutButton.topAnchor.constraint(equalTo: applePayButton.bottomAnchor, constant: 20).isActive = true
+        expressCheckoutButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10).isActive = true
     }
 
     @objc

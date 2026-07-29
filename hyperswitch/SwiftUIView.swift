@@ -45,7 +45,7 @@ struct SwiftUIView: View {
                         case .completed:
                             Text("Payment complete")
                                 .padding()
-                        case .failed(let error as NSError):
+                        case .failed(let error as NSError, _):
                             Text("Payment failed: \(error)")
                                 .padding()
                         case .canceled:

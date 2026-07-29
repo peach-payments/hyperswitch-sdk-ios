@@ -21,7 +21,7 @@ class SDKParams {
     // an IR_06 "missing field user_agent" deserialise error.
     static let userAgent: String = {
         let osString = UIDevice.current.systemVersion.replacingOccurrences(of: ".", with: "_")
-        let appName = (Bundle.main.infoDictionary?["CFBundleName"] as? String) ?? "Hyperswitch"
+        let appName = (Bundle.main.infoDictionary?["CFBundleName"] as? String) ?? "PeachDemoStore"
         let appVersion = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "1.0"
         return "Mozilla/5.0 (\(UIDevice.current.model); CPU OS \(osString) like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 \(appName)/\(appVersion)"
     }()

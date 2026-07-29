@@ -82,7 +82,7 @@ class PaymentMethodManagementViewController: UIViewController {
                     case .completed:
                         self.showAlert(title: "Success", message: "Successfully saved the payment method")
                     //                        self.hyperViewModel.preparePaymentMethodManagement()
-                    case .failed(let error):
+                    case .failed(let error, _):
                         self.showAlert(title: "Error", message: "Failure: \(error.localizedDescription)")
                     //                        self.hyperViewModel.preparePaymentMethodManagement()
                     case .canceled:
@@ -116,7 +116,7 @@ extension PaymentMethodManagementViewController {
         backButton.widthAnchor.constraint(equalToConstant: 25).isActive = true
         backButton.heightAnchor.constraint(equalToConstant: 25).isActive = true
 
-        textLabel.text = "Hyperswitch"
+        textLabel.text = "PeachDemoStore"
         textLabel.font = .boldSystemFont(ofSize: 16.5)
         topBarView.addSubview(textLabel)
         textLabel.translatesAutoresizingMaskIntoConstraints = false

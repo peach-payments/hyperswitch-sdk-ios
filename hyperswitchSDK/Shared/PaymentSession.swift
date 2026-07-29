@@ -11,7 +11,13 @@ import Foundation
 @frozen public enum PaymentResult {
     case completed(data: String)
     case canceled(data: String)
-    case failed(error: Error)
+    /// The payment attempt failed.
+    /// - Parameters:
+    ///   - error: The error encountered by the customer.
+    ///   - paymentIntent: An up-to-date payment intent (force-synced from the API after the
+    ///     failure) serialized as a JSON string, or `nil` when none was available. Parse this to
+    ///     inspect the canonical payment state (status, error_code, error_message, attempts, etc.).
+    case failed(error: Error, paymentIntent: String? = nil)
 }
 
 public enum UpdateIntentResult {

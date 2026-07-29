@@ -8,36 +8,11 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var selectedSegment = 0
-
+    // UIKit is the primary demo surface. The other views (SwiftUI, Headless,
+    // 3DS, C2P, Widget) remain available as UIViewControllerRepresentables
+    // below for ad-hoc testing, but the segmented tab bar has been removed.
     var body: some View {
-        VStack {
-            Picker(selection: $selectedSegment, label: Text("")) {
-                Text("UIKit View").tag(0)
-                Text("SwiftUI View").tag(1)
-                Text("Headless View").tag(2)
-                Text("3DS").tag(3)
-                Text("C2P").tag(4)
-                Text("Widget").tag(5)
-            }.pickerStyle(SegmentedPickerStyle())
-
-            switch selectedSegment {
-            case 0:
-                UIKitView()
-            case 1:
-                SwiftUIView()
-            case 2:
-                HeadlessView()
-            case 3:
-                ThreeDSView()
-            case 4:
-                ClickToPayView()
-            case 5:
-                WidgetView()
-            default:
-                UIKitView()
-            }
-        }
+        UIKitView()
     }
 }
 struct HeadlessView: UIViewControllerRepresentable {

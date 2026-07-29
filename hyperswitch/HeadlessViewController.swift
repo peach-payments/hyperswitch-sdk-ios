@@ -168,7 +168,7 @@ class HeadlessViewController: UIViewController {
         case .canceled(let data):
             print(["type": "canceled", "message": data])
             self.statusLabel.text = "canceled → \(data)"
-        case .failed(let error):
+        case .failed(let error, _):
             print(["type": "failed", "message": "\(error)"])
             self.statusLabel.text = "failed → \(error)"
         }

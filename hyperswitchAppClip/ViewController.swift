@@ -100,7 +100,7 @@ class ViewController: UIViewController {
                     switch result {
                     case .completed:
                         self.statusLabel.text = "Payment complete"
-                    case .failed(let error):
+                    case .failed(let error, _):
                         self.statusLabel.text = "Payment failed: \(error)"
                     case .canceled:
                         self.statusLabel.text = "Payment canceled."

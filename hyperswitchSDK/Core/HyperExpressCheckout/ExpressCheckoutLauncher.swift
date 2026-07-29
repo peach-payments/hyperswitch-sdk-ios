@@ -12,7 +12,7 @@ import WebKit
 @frozen public enum ExpressCheckoutResult {
     case completed(data: String)
     case canceled(data: String)
-    case failed(error: Error)
+    case failed(error: Error, paymentIntent: String? = nil)
 }
 
 public class ExpressCheckoutLauncher {
@@ -87,7 +87,8 @@ extension ExpressCheckoutLauncher: RNResponseHandler {
 
         if let completion = ExpressCheckoutLauncher.completion {
             if let error = error {
-                completion(.failed(error: error))
+                let paymentIntent = (error as NSError).userInfo["payment_intent"] as? String
+                completion(.failed(error: error, paymentIntent: paymentIntent))
             } else if response == "cancelled" {
                 completion(.canceled(data: "cancelled"))
             } else {

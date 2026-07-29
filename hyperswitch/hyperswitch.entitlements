@@ -13,9 +13,7 @@
 	</array>
 	<key>com.apple.developer.in-app-payments</key>
 	<array>
-		<string>merchant.com.peachpayments</string>
 		<string>merchant.com.peachpayments.9e92ddb84f564809a6cac5e3b934357d</string>
-		<string>merchant.com.peachpayments.e4648d342a0a11e9adbe02d14de18c0c</string>
 	</array>
 </dict>
 </plist>
