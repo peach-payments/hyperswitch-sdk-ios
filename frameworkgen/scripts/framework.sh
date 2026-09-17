@@ -109,8 +109,13 @@ function copy_prebuilt_react_native() {
       echo "ERROR: expected prebuilt header tree missing: $tree" >&2
       exit 1
     fi
+    # module.modulemap is deliberately excluded. React-Core-prebuilt ships one declaring
+    # CoreModules, yoga, RCTImage and friends; upstream can carry it because that pod owns
+    # its own module scope. Here the tree is only a header search path, and a loose module
+    # map on such a path poisons clang's module graph -- system modules (os, Security,
+    # CoreData, ...) stop resolving. The headers alone are what this pod needs.
     echo "Vendoring headers from $(basename "$(dirname "$tree")")"
-    rsync -a --exclude '.DS_Store' "$tree/" "$dest/Headers/"
+    rsync -a --exclude '.DS_Store' --exclude 'module.modulemap' "$tree/" "$dest/Headers/"
   done
 }
 
