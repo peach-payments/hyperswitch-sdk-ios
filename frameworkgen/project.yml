@@ -5,7 +5,7 @@ targets:
   DummyApp:
     type: application
     platform: iOS
-    deploymentTarget: "13.4"
+    deploymentTarget: "15.1"   # matches peachpayments-hyperswitch-ios.podspec; Xcode 27 requires >= 15.0
     sources: [DummyApp]
     configFiles:
       Debug: xcconfig/DummyApp.debug.xcconfig

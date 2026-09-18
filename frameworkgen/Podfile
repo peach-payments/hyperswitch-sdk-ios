@@ -20,7 +20,11 @@ target 'DummyApp' do
     :path => config[:reactNativePath],
     :hermes_enabled => true,
     :fabric_enabled => false,
-    :app_path => "#{Pod::Config.instance.installation_root}/.."
+    # The JS project root is the core repo, two levels up from this Podfile
+    # (ios/frameworkgen). Before ios/ became a submodule this Podfile sat one
+    # level below the repo root and "/.." was correct; it now resolves to ios/,
+    # which has no package.json, and codegen aborts.
+    :app_path => "#{Pod::Config.instance.installation_root}/../.."
   )
 
   post_install do |installer|
@@ -30,5 +34,70 @@ target 'DummyApp' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Xcode 27 rejects deployment targets below 15.0, and several pods (e.g. RNSVG's
+    # resource bundles) still declare 12.4. Raise every pod target to the SDK's own
+    # minimum so the archive is buildable.
+    min_ios = '15.1'
+    installer.pods_project.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios
+    end
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        current = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+        if current.nil? || current.to_f < min_ios.to_f
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios
+        end
+      end
+    end
+
+    # React Native 0.79 splits jsinspector across two pods: React-jsinspector
+    # (source_files "*.{cpp,h}", header_dir "jsinspector-modern") and
+    # React-jsinspectortracing (header_dir "jsinspector-modern/tracing", built into
+    # jsinspector_moderntracing.framework). RuntimeAgent.h -- a public header of the
+    # FIRST -- does #include <jsinspector-modern/tracing/RuntimeSamplingProfile.h>.
+    # That path is not a framework name, so it cannot resolve through framework search
+    # paths; it needs the tracing framework's Headers root on the plain header search
+    # path. Add just that one directory -- deliberately not node_modules/.../ReactCommon,
+    # which puts ~29 namespaces on the search path and breaks system module resolution.
+    #
+    # Scope this to the jsinspector targets. Writing HEADER_SEARCH_PATHS into a target's
+    # build settings SHADOWS the pod's own xcconfig rather than adding to it -- $(inherited)
+    # there inherits from the project, not from the xcconfig -- so applying it to every pod
+    # wipes out their header search paths. Sentry then fails to resolve Foundation itself:
+    # "cannot find type 'NSObject' in scope".
+    tracing_headers =
+      '"$(PODS_CONFIGURATION_BUILD_DIR)/React-jsinspectortracing/jsinspector_moderntracing.framework/Headers"'
+    installer.pods_project.targets.each do |target|
+      next unless target.name.start_with?('React-jsinspector')
+      target.build_configurations.each do |config|
+        existing = config.build_settings['HEADER_SEARCH_PATHS'] || '$(inherited)'
+        existing = existing.join(' ') if existing.is_a?(Array)
+        next if existing.include?(tracing_headers)
+        config.build_settings['HEADER_SEARCH_PATHS'] = "#{existing} #{tracing_headers}"
+      end
+    end
+
+    # Several React Native 0.79.7 podspecs declare the same header directory -- e.g.
+    # react/renderer/components/scrollview is in both React-Fabric.podspec:150 and
+    # React-FabricComponents.podspec:136, and react/renderer/consistency likewise.
+    # CocoaPods turns each into a "Copy <dir> Public Headers" phase, so two targets
+    # write the same file. Xcode 16+ rejects that as a hard "Multiple commands produce
+    # ..." error rather than the warning it used to be, which makes the archive
+    # unbuildable. Keep the first copy of each destination and drop the rest.
+    seen_header_copies = {}
+    installer.pods_project.targets.each do |target|
+      target.build_phases.dup.each do |phase|
+        next unless phase.is_a?(Xcodeproj::Project::Object::PBXCopyFilesBuildPhase)
+        name = phase.display_name.to_s
+        next unless name.include?('Public Headers')
+        if seen_header_copies.key?(name)
+          Pod::UI.puts "[peach] dropping duplicate header copy in #{target.name}: #{name} (kept in #{seen_header_copies[name]})"
+          target.build_phases.delete(phase)
+        else
+          seen_header_copies[name] = target.name
+        end
+      end
+    end
   end
 end
