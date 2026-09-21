@@ -1,6 +1,17 @@
 name: DummyApp
 options:
   bundleIdPrefix: com.my.dummy.app
+schemes:
+  DummyApp:
+    build:
+      # Build targets serially. React-RCTAppDelegate declares a dependency on
+      # React-RCTRuntime and still starts compiling before RCTRuntime.framework has copied
+      # its public headers, so <React/RCTHermesInstanceFactory.h> is not found. The
+      # dependency edge is present in the project; parallel scheduling just does not wait
+      # for the copy-headers phase of a dependency under use_frameworks!.
+      parallelizeBuild: false
+      targets:
+        DummyApp: all
 targets:
   DummyApp:
     type: application

@@ -101,7 +101,11 @@ if [ "${REBUILD_XCFRAMEWORKS:-0}" = "1" ]; then
     (
         cd "$SCRIPT_DIR/frameworkgen"
         xcodegen generate                 # project.yml -> DummyApp.xcodeproj
-        bundle exec pod install           # -> DummyApp.xcworkspace (archive.sh needs this)
+        # USE_FRAMEWORKS is what makes the Podfile call use_frameworks!. Without it every
+        # pod builds as a static library into Products/usr/local/lib, the archive contains
+        # no Products/Library/Frameworks, and archive.sh has nothing to tar. The whole
+        # point of frameworkgen is producing dynamic frameworks, so it is not optional.
+        USE_FRAMEWORKS=dynamic bundle exec pod install   # -> DummyApp.xcworkspace
         ./scripts/archive.sh iphoneos
         ./scripts/archive.sh iphonesimulator
         ./scripts/framework.sh

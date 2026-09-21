@@ -1,3 +1,4 @@
+require 'pathname'
 require Pod::Executable.execute_command('node', ['-p',
   'require.resolve(
     "react-native/scripts/react_native_pods.rb",
@@ -51,31 +52,147 @@ target 'DummyApp' do
       end
     end
 
-    # React Native 0.79 splits jsinspector across two pods: React-jsinspector
-    # (source_files "*.{cpp,h}", header_dir "jsinspector-modern") and
-    # React-jsinspectortracing (header_dir "jsinspector-modern/tracing", built into
-    # jsinspector_moderntracing.framework). RuntimeAgent.h -- a public header of the
-    # FIRST -- does #include <jsinspector-modern/tracing/RuntimeSamplingProfile.h>.
-    # That path is not a framework name, so it cannot resolve through framework search
-    # paths; it needs the tracing framework's Headers root on the plain header search
-    # path. Add just that one directory -- deliberately not node_modules/.../ReactCommon,
-    # which puts ~29 namespaces on the search path and breaks system module resolution.
+    # Under use_frameworks! the React Native pods do not propagate their header search
+    # paths to dependent pods, so every angle-bracket include that crosses a pod boundary
+    # fails -- <jsinspector-modern/tracing/RuntimeSamplingProfile.h> from React-jsiexecutor,
+    # <yoga/Yoga.h> from React-Core, <ReactCommon/TurboModule.h> from
+    # React-NativeModulesApple, <react/runtime/JSRuntimeFactory.h> from React-RuntimeCore.
+    # Each only surfaces once the previous is fixed, so they are resolved here as a set.
     #
-    # Scope this to the jsinspector targets. Writing HEADER_SEARCH_PATHS into a target's
-    # build settings SHADOWS the pod's own xcconfig rather than adding to it -- $(inherited)
-    # there inherits from the project, not from the xcconfig -- so applying it to every pod
-    # wipes out their header search paths. Sentry then fails to resolve Foundation itself:
-    # "cannot find type 'NSObject' in scope".
-    tracing_headers =
-      '"$(PODS_CONFIGURATION_BUILD_DIR)/React-jsinspectortracing/jsinspector_moderntracing.framework/Headers"'
-    installer.pods_project.targets.each do |target|
-      next unless target.name.start_with?('React-jsinspector')
-      target.build_configurations.each do |config|
-        existing = config.build_settings['HEADER_SEARCH_PATHS'] || '$(inherited)'
-        existing = existing.join(' ') if existing.is_a?(Array)
-        next if existing.include?(tracing_headers)
-        config.build_settings['HEADER_SEARCH_PATHS'] = "#{existing} #{tracing_headers}"
+    # This list is derived, not guessed. Every angle-bracket include in the React Native
+    # tree (894 distinct, 492 resolvable within it -- the rest are system or third-party)
+    # was matched against the directories that can satisfy it, and a greedy set cover over
+    # those gives the 20 roots below. Android and test variants are excluded; `view` has no
+    # ios variant so it uses platform/cxx. Ordered specific-first so the platform/ios roots
+    # win over the generic ReactCommon for headers that exist in both.
+    #
+    # Append to the generated xcconfigs rather than writing HEADER_SEARCH_PATHS into the
+    # targets' build settings: a value set on a target SHADOWS the xcconfig CocoaPods wrote,
+    # so every pod would silently lose the header paths its own podspec declared.
+    rn = '$(PODS_ROOT)/../../../node_modules/react-native'
+    extra_header_paths = [
+      "#{rn}/ReactCommon/react/renderer/components/textinput/platform/ios",
+      "#{rn}/ReactCommon/react/renderer/textlayoutmanager/platform/ios",
+      "#{rn}/ReactCommon/react/renderer/imagemanager/platform/ios",
+      "#{rn}/ReactCommon/react/renderer/graphics/platform/ios",
+      "#{rn}/ReactCommon/react/renderer/components/view/platform/cxx",
+      "#{rn}/ReactCommon/react/nativemodule/core/platform/ios",
+      "#{rn}/ReactCommon/react/runtime/platform/ios",
+      "#{rn}/ReactCommon/react/nativemodule/core",
+      "#{rn}/ReactCommon/react/nativemodule/samples",
+      "#{rn}/ReactCommon/reactperflogger",
+      "#{rn}/ReactCommon/runtimeexecutor",
+      "#{rn}/ReactCommon/callinvoker",
+      "#{rn}/ReactCommon/jsiexecutor",
+      "#{rn}/ReactCommon/jsitooling",
+      "#{rn}/ReactCommon/jsi",
+      "#{rn}/ReactCommon/yoga",
+      "#{rn}/ReactCommon",
+      "#{rn}/React/FBReactNativeSpec",
+      "#{rn}/React",
+      "#{rn}/Libraries/FBLazyVector",
+    ].map { |path| "\"#{path}\"" }
+
+    # The source tree only resolves about half the cross-pod includes. The rest use
+    # CocoaPods' flattened header layout -- <React/RCTHermesInstanceFactory.h> is really
+    # React/Runtime/RCTHermesInstanceFactory.h, remapped by React-RCTRuntime's header_dir --
+    # so they can only resolve through the owning pod's built framework. Add every pod
+    # framework's Headers dir, computed from the installer rather than enumerated by hand.
+    installer.pod_targets.each do |pod_target|
+      next unless pod_target.build_as_framework?
+      extra_header_paths << "\"$(PODS_CONFIGURATION_BUILD_DIR)/#{pod_target.name}/" \
+                            "#{pod_target.product_module_name}.framework/Headers\""
+    end
+
+    Dir.glob(File.join(installer.sandbox.root, 'Target Support Files', '**', '*.xcconfig')).each do |xcconfig|
+      contents = File.read(xcconfig)
+      missing = extra_header_paths.reject { |path| contents.include?(path) }
+      next if missing.empty?
+      addition = missing.join(' ')
+      if contents =~ /^HEADER_SEARCH_PATHS = .*$/
+        contents = contents.sub(/^HEADER_SEARCH_PATHS = (.*)$/) { "HEADER_SEARCH_PATHS = #{$1} #{addition}" }
+      else
+        contents += "\nHEADER_SEARCH_PATHS = $(inherited) #{addition}\n"
       end
+      # React.framework's public headers include plain headers from other pods -- RCTConvert.h
+      # includes <yoga/Yoga.h>, RCTLayout.h likewise. Under use_frameworks! clang treats a
+      # non-modular include inside a framework module as an error rather than a warning.
+      unless contents.include?('CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES')
+        contents += "\nCLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES\n"
+      end
+      File.write(xcconfig, contents)
+    end
+
+    # CocoaPods derives each public-headers copy phase destination from the pod's
+    # header_mappings_dir taken relative to the sandbox. React Native's pods live OUTSIDE
+    # the sandbox (node_modules) and several set header_mappings_dir = "./", so the
+    # destination comes out as
+    #   $(PUBLIC_HEADERS_FOLDER_PATH)/../../../../../node_modules/react-native/React/Runtime
+    # which escapes the framework entirely. The headers are copied somewhere harmless and
+    # never appear in <Pod>.framework/Headers, so every cross-pod include of them fails --
+    # <React/RCTHermesInstanceFactory.h>, <yoga/Yoga.h>, <ReactCommon/TurboModule.h> and the
+    # rest are all this one defect. Pin the destination back inside the framework.
+    #
+    # The correct destination is PUBLIC_HEADERS_FOLDER_PATH plus the source directory's path
+    # relative to the POD ROOT -- that is what header_mappings_dir means. CocoaPods computed
+    # it relative to the sandbox instead. Do not simply flatten: React-Fabric keeps headers
+    # in react/renderer/components/{view,scrollview}/ and both define conversions.h, so
+    # flattening produces "Multiple commands produce .../Headers/conversions.h".
+    # The number of leading ../ varies per pod (5 for React-RCTRuntime, 4 for React-Fabric),
+    # but what follows is always a path from the repo root, so strip the prefix outright
+    # rather than trying to resolve it. sandbox is <repo>/ios/frameworkgen/Pods.
+    real_path = lambda { |path| path.exist? ? path.realpath : path.cleanpath }
+    repo_root = Pathname.new(installer.sandbox.root.to_s).cleanpath.parent.parent.parent
+    pod_roots = {}
+    installer.pod_targets.each do |pt|
+      accessor = pt.file_accessors.first
+      # realpath, because ios/node_modules is a symlink to ../node_modules: the pod root
+      # comes back as <repo>/ios/node_modules/... while the copy destination resolves to
+      # <repo>/node_modules/... . Same directory, different spelling, and relative_path_from
+      # between the two spellings yields a ".." path that silently matches nothing. That
+      # symlink is also why CocoaPods emitted the escaping destinations to begin with.
+      pod_roots[pt.name] = real_path.call(Pathname.new(accessor.path_list.root.to_s)) if accessor
+    end
+
+    installer.pods_project.targets.each do |target|
+      pod_root = pod_roots[target.name]
+      next unless pod_root
+      target.build_phases.each do |phase|
+        next unless phase.is_a?(Xcodeproj::Project::Object::PBXCopyFilesBuildPhase)
+        dst = phase.dst_path.to_s
+        next unless dst.include?('..')
+        from_repo_root = dst.sub('$(PUBLIC_HEADERS_FOLDER_PATH)/', '').sub(%r{\A(?:\.\./)+}, '')
+        source_dir = real_path.call(repo_root + from_repo_root)
+        begin
+          inside_pod = source_dir.relative_path_from(pod_root).to_s
+        rescue ArgumentError
+          next
+        end
+        next if inside_pod.start_with?('..')
+        inside_pod = '' if inside_pod == '.'
+        new_dst = inside_pod.empty? ? '$(PUBLIC_HEADERS_FOLDER_PATH)'
+                                    : "$(PUBLIC_HEADERS_FOLDER_PATH)/#{inside_pod}"
+        next if new_dst == dst
+        phase.dst_path = new_dst
+        Pod::UI.puts "[peach] repointing header copy in #{target.name} -> #{new_dst}"
+      end
+    end
+
+    # Upstream bug in React Native 0.79.7: React-RCTAppDelegate's
+    # RCTDefaultReactNativeFactoryDelegate.mm includes <React/RCTHermesInstanceFactory.h>,
+    # a header only React-RCTRuntime vends, but the podspec never declares that dependency.
+    # In a static build it does not matter -- every pod's headers land in the shared
+    # Pods/Headers/Public farm regardless of build order. Under use_frameworks! each pod's
+    # headers live inside its own framework, so without the edge React-RCTAppDelegate
+    # compiles before RCTRuntime.framework exists and the include fails. Add the edge.
+    missing_edges = { 'React-RCTAppDelegate' => 'React-RCTRuntime' }
+    missing_edges.each do |consumer_name, provider_name|
+      consumer = installer.pods_project.targets.find { |t| t.name == consumer_name }
+      provider = installer.pods_project.targets.find { |t| t.name == provider_name }
+      next unless consumer && provider
+      next if consumer.dependencies.any? { |d| d.target == provider }
+      Pod::UI.puts "[peach] adding missing dependency #{consumer_name} -> #{provider_name}"
+      consumer.add_dependency(provider)
     end
 
     # Several React Native 0.79.7 podspecs declare the same header directory -- e.g.
