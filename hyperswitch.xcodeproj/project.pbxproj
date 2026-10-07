@@ -83,7 +83,6 @@
 		793451F62F96E4C700416A4B /* PaymentWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 793451F42F96E4C700416A4B /* PaymentWidget.swift */; };
 		793451F82F96E7C700416A4B /* WidgetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 793451F72F96E7C700416A4B /* WidgetViewController.swift */; };
 		793451FB2F96EB9F00416A4B /* CVCWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 793451FA2F96EB9F00416A4B /* CVCWidget.swift */; };
-		79WB0001300000000000AA02 /* WalletButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79WB0001300000000000AA01 /* WalletButtonView.swift */; };
 		7938D81B2A4EF45000286CEE /* PaymentMethodParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7938D81A2A4EF45000286CEE /* PaymentMethodParams.swift */; };
 		7954A4472C23A44B00FEC02D /* ApplePayViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 7954A4462C23A44B00FEC02D /* ApplePayViewManager.m */; };
 		7954A44A2C23A49A00FEC02D /* ApplePayViewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7954A4492C23A49A00FEC02D /* ApplePayViewManager.swift */; };
@@ -111,6 +110,7 @@
 		79FA101E2F1E93B6006B33CF /* ClickToPayCheckoutViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79FA101D2F1E93A1006B33CF /* ClickToPayCheckoutViewController.swift */; };
 		79FE014D2E97C18F00C5D94A /* Codable+UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79FE014C2E97C18F00C5D94A /* Codable+UIKit.swift */; };
 		79FE01502E97C22800C5D94A /* PaymentSheetAppearance+Codable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79FE014F2E97C22800C5D94A /* PaymentSheetAppearance+Codable.swift */; };
+		79WB0001300000000000AA02 /* WalletButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79WB0001300000000000AA01 /* WalletButtonView.swift */; };
 		DC4AC9F2296D6D6C00E0D2A6 /* PaymentCardTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC4AC9F1296D6D6C00E0D2A6 /* PaymentCardTextField.swift */; };
 		DC4AC9F5296EC12D00E0D2A6 /* PaymentCardTextField+SwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC4AC9F4296EC12D00E0D2A6 /* PaymentCardTextField+SwiftUI.swift */; };
 		DC5D0114294731480017C67A /* PaymentSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC5D0111294731480017C67A /* PaymentSheet.swift */; };
@@ -217,7 +217,6 @@
 		793451F42F96E4C700416A4B /* PaymentWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentWidget.swift; sourceTree = "<group>"; };
 		793451F72F96E7C700416A4B /* WidgetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetViewController.swift; sourceTree = "<group>"; };
 		793451FA2F96EB9F00416A4B /* CVCWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CVCWidget.swift; sourceTree = "<group>"; };
-		79WB0001300000000000AA01 /* WalletButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletButtonView.swift; sourceTree = "<group>"; };
 		7938D81A2A4EF45000286CEE /* PaymentMethodParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentMethodParams.swift; sourceTree = "<group>"; };
 		7954A4462C23A44B00FEC02D /* ApplePayViewManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ApplePayViewManager.m; sourceTree = "<group>"; };
 		7954A4492C23A49A00FEC02D /* ApplePayViewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplePayViewManager.swift; sourceTree = "<group>"; };
@@ -258,6 +257,7 @@
 		79FA101D2F1E93A1006B33CF /* ClickToPayCheckoutViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClickToPayCheckoutViewController.swift; sourceTree = "<group>"; };
 		79FE014C2E97C18F00C5D94A /* Codable+UIKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Codable+UIKit.swift"; sourceTree = "<group>"; };
 		79FE014F2E97C22800C5D94A /* PaymentSheetAppearance+Codable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PaymentSheetAppearance+Codable.swift"; sourceTree = "<group>"; };
+		79WB0001300000000000AA01 /* WalletButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletButtonView.swift; sourceTree = "<group>"; };
 		DC4AC9F1296D6D6C00E0D2A6 /* PaymentCardTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentCardTextField.swift; sourceTree = "<group>"; };
 		DC4AC9F4296EC12D00E0D2A6 /* PaymentCardTextField+SwiftUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PaymentCardTextField+SwiftUI.swift"; sourceTree = "<group>"; };
 		DC5D0111294731480017C67A /* PaymentSheet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PaymentSheet.swift; sourceTree = "<group>"; };
@@ -470,14 +470,6 @@
 			path = HyperCVCWidget;
 			sourceTree = "<group>";
 		};
-		79WB0001300000000000AA03 /* HyperWalletButton */ = {
-			isa = PBXGroup;
-			children = (
-				79WB0001300000000000AA01 /* WalletButtonView.swift */,
-			);
-			path = HyperWalletButton;
-			sourceTree = "<group>";
-		};
 		7954A4452C23A42200FEC02D /* ApplePay */ = {
 			isa = PBXGroup;
 			children = (
@@ -584,6 +576,14 @@
 				DC5D012C29486B560017C67A /* Resources */,
 			);
 			path = Core;
+			sourceTree = "<group>";
+		};
+		79WB0001300000000000AA03 /* HyperWalletButton */ = {
+			isa = PBXGroup;
+			children = (
+				79WB0001300000000000AA01 /* WalletButtonView.swift */,
+			);
+			path = HyperWalletButton;
 			sourceTree = "<group>";
 		};
 		D5E7F82111B2BDFA1E8F48E7 /* Frameworks */ = {
