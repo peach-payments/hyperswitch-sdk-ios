@@ -1,4 +1,4 @@
-version = "0.7.5"
+version = "0.7.6"
 
 Pod::Spec.new do |s|
   s.name                      = 'peachpayments-hyperswitch-ios-authentication'
