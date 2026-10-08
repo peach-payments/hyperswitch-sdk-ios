@@ -50,6 +50,12 @@ extension PaymentSheet {
         public var displaySavedPaymentMethods: Bool?
 
         ///
+        /// toggle to hide the "Add new payment method" link, keeping the shopper on their
+        /// saved payment methods. Has no effect when there are none to stay on -- the new
+        /// payment form is shown regardless. Default value is `true`
+        public var displayAddNewPaymentMethod: Bool?
+
+        ///
         /// toggle to disable Branding
         public var disableBranding: Bool?
 
