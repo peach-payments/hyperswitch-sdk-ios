@@ -13,6 +13,8 @@
 //
 
 import Foundation
+import UIKit
+import React
 
 /// Shared plumbing for the standalone wallet button widgets. Not public: hosts
 /// use `ApplePayButton` or `ExpressCheckoutButton`.

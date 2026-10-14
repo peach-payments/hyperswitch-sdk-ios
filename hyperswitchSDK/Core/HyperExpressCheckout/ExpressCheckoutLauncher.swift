@@ -8,6 +8,7 @@
 import Foundation
 import React
 import WebKit
+import UIKit
 
 @frozen public enum ExpressCheckoutResult {
     case completed(data: String)

@@ -7,6 +7,8 @@
 
 import Combine
 import Foundation
+import UIKit
+import React
 
 public class PaymentWidget: UIControl {
 

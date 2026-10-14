@@ -7,6 +7,7 @@
 
 import Foundation
 import React
+import UIKit
 
 extension PaymentSession {
 

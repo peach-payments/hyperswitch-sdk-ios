@@ -7,6 +7,7 @@
 
 import Foundation
 import React
+import UIKit
 
 @objc(HyperModule)
 internal class HyperModule: RCTEventEmitter {

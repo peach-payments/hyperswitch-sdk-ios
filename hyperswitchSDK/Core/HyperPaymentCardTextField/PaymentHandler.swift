@@ -5,6 +5,7 @@
 //  Created by Harshit Srivastava on 10/05/23.
 //
 
+import UIKit
 public class PaymentHandler: NSObject {
 
     @objc public static let sharedHandler: PaymentHandler = PaymentHandler()

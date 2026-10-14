@@ -6,6 +6,8 @@
 //
 
 import WebKit
+import UIKit
+import React
 
 final internal class HeadlessWebView: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
 
