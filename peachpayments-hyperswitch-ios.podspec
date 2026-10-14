@@ -20,14 +20,33 @@ Pod::Spec.new do |s|
   # hermesvm.xcframework. Headers/ holds the <react/...>, <yoga/...> and folly/glog/boost
   # namespaces those modules include, flattened exactly as the upstream pods do.
   #
-  # The binaries are vendored by `core` (alongside the SDK's own sources, which is what
-  # makes `import React` resolve); this subspec carries only the header trees, so that the
-  # header_mappings_dir needed to preserve <react/...> nesting does not disturb core.
+  # The binaries are vendored by `core`. This subspec carries only the header trees, and
+  # deliberately does NOT declare them as source_files / public_header_files.
+  #
+  # React.framework ships its own module map, so `import React` finds the module; what
+  # fails is BUILDING it, because its umbrella header reaches for RCTDeprecation,
+  # <react/...>, <yoga/...> and folly/glog/boost. Those headers therefore have to be
+  # reachable -- but only on an include path, not as part of this pod's module.
+  #
+  # Declaring them as public headers folds 35 namespaces into the single module map and
+  # umbrella header CocoaPods generates for peachpayments-hyperswitch-ios, which poisons
+  # clang's module graph: `os`, `Security`, `CoreData`, `CoreMedia` and `Network` all stop
+  # resolving. A plain HEADER_SEARCH_PATHS entry has none of that effect, provided the
+  # module.modulemap at the root of React-Core-prebuilt's tree is excluded when the tree is
+  # vendored (framework.sh does this) -- a loose module map on a search path is what
+  # actually disturbs module resolution.
+  #
+  # Verified directly: `import React` plus all five system modules above compile against a
+  # framework search path + this include path, and fail without it with
+  # "'RCTDeprecation/RCTDeprecation.h' file not found / could not build module 'React'".
+  #
+  # pod_target_xcconfig applies to the whole pod target, so `core`'s sources -- the 14 files
+  # that import React -- pick the path up through this subspec being a dependency.
   s.subspec 'reactnative' do |rn|
     rn.preserve_paths      = 'frameworkgen/Frameworks/ReactNative/**/*'
-    rn.header_mappings_dir = 'frameworkgen/Frameworks/ReactNative/Headers'
-    rn.source_files        = 'frameworkgen/Frameworks/ReactNative/Headers/**/*.{h,hpp}'
-    rn.public_header_files = 'frameworkgen/Frameworks/ReactNative/Headers/**/*.h'
+    rn.pod_target_xcconfig = {
+      'HEADER_SEARCH_PATHS' => '"${PODS_TARGET_SRCROOT}/frameworkgen/Frameworks/ReactNative/Headers"'
+    }
   end
 
   s.subspec 'core' do |core|
