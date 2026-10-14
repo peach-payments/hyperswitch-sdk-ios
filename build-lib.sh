@@ -223,6 +223,18 @@ else
 fi
 echo "    asset live at ${ASSET_URL}"
 
+# ----- 7b. Swift Package Manager assets ---------------------------------------------------------
+# One zip + checksum per xcframework, and Package.swift rewritten from path: to url:/checksum:.
+# SPM reads Package.swift from the TAG, so the rewrite has to be committed before the tag moves.
+if [ "${SKIP_SPM:-0}" != "1" ]; then
+    echo "==> Building SPM artifacts"
+    "${SCRIPT_DIR}/frameworkgen/scripts/spm-release.sh" "$VERSION" "$FORK_SLUG" "$TAG"
+    for zip_file in "${SCRIPT_DIR}"/spm-artifacts/*.xcframework.zip; do
+        gh release upload "$TAG" "$zip_file" --repo "$FORK_SLUG" --clobber
+    done
+    echo "    SPM binary targets uploaded to ${TAG}"
+fi
+
 # ----- 8. remote gate + publish podspecs -------------------------------------------------------
 # Register the spec repo locally if needed.
 if ! $POD repo list 2>/dev/null | grep -q "^${SPEC_REPO_NAME}$"; then

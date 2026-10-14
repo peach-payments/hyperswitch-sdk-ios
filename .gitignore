@@ -95,3 +95,4 @@ Gemfile.lock
 # in the parent monorepo. None of these are committed to this repo.
 **/*.xcframework
 hyperswitchSDK/Core/Resources/hyperswitch.bundle
+spm-artifacts/
