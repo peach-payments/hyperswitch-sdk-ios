@@ -14,6 +14,43 @@ Pod::Spec.new do |s|
   s.source                    = { :http => "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v#{s.version}/hyperswitch-sdk-ios-#{s.version}.zip" }
   s.module_name               = 'Hyperswitch'
 
+  # React.framework is vendored as a prebuilt binary, and its own headers include
+  # RCTDeprecation/RCTDeprecation.h, yoga/Yoga.h, react/runtime/JSRuntimeFactoryCAPI.h and
+  # five more BY PATH. Those live in the flattened tree under frameworkgen/Frameworks/
+  # ReactNative/Headers, so two things have to be true wherever the React module is built:
+  #
+  #   HEADER_SEARCH_PATHS  - so the includes resolve at all. Without it the build fails with
+  #                          "'RCTDeprecation/RCTDeprecation.h' file not found" and then
+  #                          "could not build Objective-C module 'React'".
+  #   the warning disabled - the tree is deliberately NOT module-mapped (a loose module map
+  #                          on a search path breaks resolution of os, Security, CoreData,
+  #                          CoreMedia and Network), so these includes are non-modular by
+  #                          construction. CocoaPods compiles with -Werror, which turns the
+  #                          resulting warning into 8 hard errors.
+  #
+  # Both are declared here rather than on the `reactnative` subspec: a subspec's
+  # pod_target_xcconfig does not reach the target that builds a vendored framework's module.
+  # user_target_xcconfig carries the same to the consuming app, which builds the React
+  # module itself when it imports Hyperswitch.
+  # The warning is suppressed through OTHER_CFLAGS rather than
+  # CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE. That build setting is already set to
+  # YES_ERROR on the generated target, which wins over an xcconfig, so it emits
+  # -Werror=non-modular-include-in-framework-module regardless of what we ask for -- verified:
+  # with the setting in place, -Wno-non-modular-include-in-framework-module never reached the
+  # command line, while HEADER_SEARCH_PATHS from the same dictionary did (29 -I occurrences).
+  # A flag appended to OTHER_CFLAGS lands after the -Werror= one, and the last flag wins.
+  # $(inherited) matters: CocoaPods merges every pod's flags into this setting.
+  s.pod_target_xcconfig = {
+    'HEADER_SEARCH_PATHS' => '$(inherited) "${PODS_TARGET_SRCROOT}/frameworkgen/Frameworks/ReactNative/Headers"',
+    'OTHER_CFLAGS' => '$(inherited) -Wno-non-modular-include-in-framework-module',
+    'OTHER_SWIFT_FLAGS' => '$(inherited) -Xcc -Wno-non-modular-include-in-framework-module'
+  }
+  # The consuming app builds the React module too, the moment it imports Hyperswitch.
+  s.user_target_xcconfig = {
+    'OTHER_CFLAGS' => '$(inherited) -Wno-non-modular-include-in-framework-module',
+    'OTHER_SWIFT_FLAGS' => '$(inherited) -Xcc -Wno-non-modular-include-in-framework-module'
+  }
+
   # React Native 0.87 ships its core prebuilt rather than compiling it into the host app,
   # so it is vendored here: React.xcframework (the compiled core, carrying the <React/...>
   # headers and the framework module map), ReactNativeDependencies.xcframework, and
@@ -44,9 +81,6 @@ Pod::Spec.new do |s|
   # that import React -- pick the path up through this subspec being a dependency.
   s.subspec 'reactnative' do |rn|
     rn.preserve_paths      = 'frameworkgen/Frameworks/ReactNative/**/*'
-    rn.pod_target_xcconfig = {
-      'HEADER_SEARCH_PATHS' => '"${PODS_TARGET_SRCROOT}/frameworkgen/Frameworks/ReactNative/Headers"'
-    }
   end
 
   s.subspec 'core' do |core|
