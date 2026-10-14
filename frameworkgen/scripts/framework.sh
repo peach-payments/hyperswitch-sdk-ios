@@ -104,6 +104,47 @@ function copy_prebuilt_react_native() {
     rsync -a --exclude '.DS_Store' "$source" "$binaries_dest/"
   done
 
+  # Upstream's prebuilt tarball also ships ReactNativeHeaders.xcframework: the same 29
+  # namespaces as the flattened tree, but as a real xcframework (Headers/ plus a stub
+  # libReactNativeHeaders-*.a). React-Core-prebuilt's prepare_command flattens it and then
+  # deletes it, because a pod header search path is the simpler route for CocoaPods -- but
+  # the podspec itself notes it is kept in xcframework form "on the SwiftPM consumer side".
+  #
+  # Swift Package Manager needs that form. A loose header tree leaves React.framework's
+  # by-path includes non-modular, and SPM's only suppression is .unsafeFlags, which it
+  # forbids for packages consumed by version. Making the loose tree a module instead creates
+  # a React <-> headers cycle. Vendoring upstream's xcframework sidesteps both: the headers
+  # are modular because they belong to a real binary artifact.
+  #
+  # It is recovered from the cached tarball, since the pod has already deleted it by now.
+  #
+  # It lives under Frameworks/ReactNative, NOT Frameworks/Core: the core subspec vendors
+  # Core/*.xcframework, and CocoaPods refuses a vendored xcframework containing static
+  # libraries ("Unable to install vendored xcframework ... because it contains static
+  # libraries"). The stub .a that makes this consumable by SPM is exactly what CocoaPods
+  # rejects, so the two distributions take different artifacts from the same build: SPM the
+  # xcframework, CocoaPods the flattened header tree alongside it.
+  local rnh_dest="$dest/ReactNativeHeaders.xcframework"
+  if [ ! -d "$rnh_dest" ]; then
+    local tarball
+    tarball=$(ls "$pods/ReactNativeCore-artifacts/"reactnative-core-*-release.tar.gz 2>/dev/null | head -1)
+    if [ -z "$tarball" ]; then
+      echo "ERROR: no reactnative-core release tarball under $pods/ReactNativeCore-artifacts." >&2
+      echo "       Run pod install in frameworkgen first." >&2
+      exit 1
+    fi
+    echo "Vendoring prebuilt ReactNativeHeaders.xcframework (from $(basename "$tarball"))"
+    local tmp
+    tmp=$(mktemp -d)
+    tar xzf "$tarball" -C "$tmp" ReactNativeHeaders.xcframework
+    if [ ! -d "$tmp/ReactNativeHeaders.xcframework" ]; then
+      echo "ERROR: ReactNativeHeaders.xcframework not present in $tarball." >&2
+      rm -rf "$tmp"; exit 1
+    fi
+    rsync -a --exclude '.DS_Store' "$tmp/ReactNativeHeaders.xcframework" "$dest/"
+    rm -rf "$tmp"
+  fi
+
   for tree in "${header_trees[@]}"; do
     if [ ! -d "$tree" ]; then
       echo "ERROR: expected prebuilt header tree missing: $tree" >&2

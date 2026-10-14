@@ -42,6 +42,7 @@ let package = Package(
         .binaryTarget(name: "RNInAppBrowser", path: "frameworkgen/Frameworks/Core/RNInAppBrowser.xcframework"),
         .binaryTarget(name: "RNSVG", path: "frameworkgen/Frameworks/Core/RNSVG.xcframework"),
         .binaryTarget(name: "React", path: "frameworkgen/Frameworks/Core/React.xcframework"),
+        .binaryTarget(name: "ReactNativeHeaders", path: "frameworkgen/Frameworks/ReactNative/ReactNativeHeaders.xcframework"),
         .binaryTarget(name: "ReactAppDependencyProvider", path: "frameworkgen/Frameworks/Core/ReactAppDependencyProvider.xcframework"),
         .binaryTarget(name: "ReactCodegen", path: "frameworkgen/Frameworks/Core/ReactCodegen.xcframework"),
         .binaryTarget(name: "ReactNativeDependencies", path: "frameworkgen/Frameworks/Core/ReactNativeDependencies.xcframework"),
@@ -57,17 +58,14 @@ let package = Package(
         // -Swift.h, so the two targets are siblings rather than a dependency chain.
         .target(
             name: "HyperswitchObjC",
-            dependencies: ["React", "ReactNativeDependencies", "hermesvm"],
+            dependencies: ["React", "ReactNativeHeaders", "ReactNativeDependencies", "hermesvm"],
             path: "hyperswitchSDK/Core",
             sources: [
                 "NativeModule/HyperModule.m",
                 "NativeModule/HyperHeadless.m",
                 "ApplePay/ApplePayViewManager.m"
             ],
-            publicHeadersPath: "ObjCInclude",
-            cSettings: [
-                .headerSearchPath("../../frameworkgen/Frameworks/ReactNative/Headers")
-            ]
+            publicHeadersPath: "ObjCInclude"
         ),
         .target(
             name: "Hyperswitch",
@@ -92,10 +90,7 @@ let package = Package(
                 "Core/ApplePay/ApplePayViewManager.m",
                 "Core/ObjCInclude"
             ],
-            sources: ["Core", "Shared"],
-            cSettings: [
-                .headerSearchPath("../frameworkgen/Frameworks/ReactNative/Headers")
-            ]
+            sources: ["Core", "Shared"]
         )
     ]
 )
