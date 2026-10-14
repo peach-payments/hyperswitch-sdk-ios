@@ -181,6 +181,18 @@ echo "    wrote $ZIP_ABS ($(du -h "$ZIP_ABS" | cut -f1))"
 # ----- 6. pre-upload local lint (file:// against the just-built zip) ---------------------------
 # Point each s.source at the local zip so lint can actually unzip + resolve every glob before the
 # remote asset exists. Restore the real :http URL afterward via git checkout of the podspec line.
+# NOTE: run this script under Xcode 26.x (DEVELOPER_DIR=/Applications/Xcode-26.3.0.app/
+# Contents/Developer). Xcode 27 rejects IPHONEOS_DEPLOYMENT_TARGET below 15.0, and two
+# subspecs pull dependencies that still declare lower: airborne -> HyperOTA/HyperCore at
+# 12.0, paypal -> PayPal at 14.0. A podspec cannot raise a DEPENDENCY's deployment target,
+# HyperOTA 0.0.8 is the newest published, and our frameworkgen Podfile's post_install does
+# not apply here because lint resolves those pods fresh.
+#
+# Measured under Xcode 27: core, common, sentry, scancard and netcetera3ds all pass -- only
+# airborne and paypal fail. Neither is in default_subspec, nothing references paypal, and
+# airborne is pinned only by peachpayments_flutter_airborne, which is publish_to: none. So
+# this blocks releases on this machine, not merchants. The lint is deliberately NOT narrowed
+# to dodge it: that would hide a real defect in two published subspecs.
 echo "==> Local lint (file://${ZIP})"
 FILE_URL="file://${ZIP_ABS}"
 for podspec in "${PODSPECS[@]}"; do
