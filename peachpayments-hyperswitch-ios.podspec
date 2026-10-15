@@ -45,8 +45,12 @@ Pod::Spec.new do |s|
     'OTHER_CFLAGS' => '$(inherited) -Wno-non-modular-include-in-framework-module',
     'OTHER_SWIFT_FLAGS' => '$(inherited) -Xcc -Wno-non-modular-include-in-framework-module'
   }
-  # The consuming app builds the React module too, the moment it imports Hyperswitch.
+  # The consuming app builds the React module too, the moment it imports Hyperswitch --
+  # and so does any *other* pod that imports it, which is how the Flutter plugin consumes
+  # this SDK. Those targets need the header tree as well, not just the warning flags:
+  # without it, building the React module fails on <RCTDeprecation/RCTDeprecation.h>.
   s.user_target_xcconfig = {
+    'HEADER_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/peachpayments-hyperswitch-ios/frameworkgen/Frameworks/ReactNative/Headers" "${PODS_TARGET_SRCROOT}/frameworkgen/Frameworks/ReactNative/Headers"',
     'OTHER_CFLAGS' => '$(inherited) -Wno-non-modular-include-in-framework-module',
     'OTHER_SWIFT_FLAGS' => '$(inherited) -Xcc -Wno-non-modular-include-in-framework-module'
   }
