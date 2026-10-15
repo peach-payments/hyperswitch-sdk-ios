@@ -11,7 +11,7 @@ import React
 internal class RNHeadlessManager: NSObject {
 
     internal var responseHandler: RNResponseHandler?
-    internal var rootView: RCTRootView?
+    internal var rootView: UIView?
 
     internal lazy var bridgeHeadless: RCTBridge = {
         RCTBridge.init(delegate: self, launchOptions: nil)
@@ -19,8 +19,8 @@ internal class RNHeadlessManager: NSObject {
 
     internal static let sharedInstance = RNHeadlessManager()
 
-    internal func viewForModule(_ moduleName: String, initialProperties: [String: Any]?) -> RCTRootView {
-        let rootView: RCTRootView = RCTRootView(
+    internal func viewForModule(_ moduleName: String, initialProperties: [String: Any]?) -> UIView {
+        let rootView: UIView = RCTRootView(
             bridge: self.bridgeHeadless,
             moduleName: moduleName,
             initialProperties: initialProperties
