@@ -94,11 +94,6 @@ Pod::Spec.new do |s|
     # hermesvm.xcframework straight from the hermes-engine pod the build resolves.
   end
 
-  s.subspec 'sentry' do |sentry|
-    sentry.vendored_frameworks = 'frameworkgen/Frameworks/Sentry/*.xcframework'
-    sentry.dependency 'peachpayments-hyperswitch-ios/core'
-  end
-
   s.subspec 'scancard' do |scancard|
     scancard.source_files = 'frameworkgen/scanCard/Source/**/*.{m,swift,h}'
     scancard.vendored_frameworks = 'frameworkgen/scanCard/Frameworks/*.xcframework'

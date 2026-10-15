@@ -49,7 +49,6 @@ let package = Package(
         .binaryTarget(name: "React_Codegen", path: "frameworkgen/Frameworks/Core/React_Codegen.xcframework"),
         .binaryTarget(name: "hermesvm", path: "frameworkgen/Frameworks/Core/hermesvm.xcframework"),
         .binaryTarget(name: "react_native_hyperswitch_netcetera_3ds", path: "frameworkgen/Frameworks/Core/react_native_hyperswitch_netcetera_3ds.xcframework"),
-        .binaryTarget(name: "RNSentry", path: "frameworkgen/Frameworks/Sentry/RNSentry.xcframework"),
         // SPM has no mixed-language targets, and Core carries three Objective-C React Native
         // bridge shims among its Swift. They are split out here rather than moved on disk, so
         // the podspec globs and the Xcode project keep working unchanged. There is no
@@ -79,7 +78,6 @@ let package = Package(
                 "React_Codegen",
                 "hermesvm",
                 "react_native_hyperswitch_netcetera_3ds",
-                "RNSentry"
             ],
             path: "hyperswitchSDK",
             exclude: [

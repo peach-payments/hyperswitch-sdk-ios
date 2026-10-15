@@ -6,7 +6,8 @@ export SRCROOT
 set -euo pipefail
 
 excluded_frameworks=("Pods_DummyApp" "DummyApp", "react-native-hyperswitch-netcetera-3ds", "react_native_hyperswitch_scancard")
-sentry_frameworks=("Sentry" "SentryPrivate" "RNSentry")
+# Sentry has been removed from the SDK.
+sentry_frameworks=()
 paypal_frameworks=("PayPal" "ReactNativeHyperswitchPaypal")
 
 function unzip_archives() {

@@ -90,8 +90,8 @@ fi
 echo "==> Building JS bundle (yarn bundle:ios)"
 ( cd "$REPO_ROOT" && yarn bundle:ios )
 
-# ----- 3. (optional) rebuild reproducible xcframeworks (Core/Sentry) --------------------------
-# These change on a React Native or Sentry bump -- and also whenever anything in patches/
+# ----- 3. (optional) rebuild reproducible xcframeworks (Core) ---------------------------------
+# These change on a React Native bump -- and also whenever anything in patches/
 # changes, since the Core frameworks are built from node_modules. The rebuild needs xcodegen +
 # pod install to materialise frameworkgen/DummyApp.xcworkspace first. So the rebuild is OPT-IN:
 # by default we ship the xcframeworks already on disk. Set REBUILD_XCFRAMEWORKS=1 to regenerate.
@@ -112,10 +112,10 @@ if [ "${REBUILD_XCFRAMEWORKS:-0}" = "1" ]; then
     )
 else
     echo "==> Using on-disk xcframeworks (set REBUILD_XCFRAMEWORKS=1 to regenerate)"
-    # Only Core and Sentry are vendored as xcframeworks. The paypal subspec pulls the
+    # Only Core is vendored as xcframeworks. The paypal subspec pulls the
     # public PayPal pods and compiles frameworkgen/paypal/Source, so there is no
     # frameworkgen/Frameworks/PayPal to check for -- the published pod has never had one.
-    for d in Core Sentry; do
+    for d in Core; do
         count=$(ls -d "frameworkgen/Frameworks/$d"/*.xcframework 2>/dev/null | wc -l | tr -d ' ')
         [ "$count" -gt 0 ] || { echo "ERROR: no xcframeworks in frameworkgen/Frameworks/$d — run with REBUILD_XCFRAMEWORKS=1."; exit 1; }
         echo "    frameworkgen/Frameworks/$d: $count xcframework(s)"
@@ -165,7 +165,6 @@ copy_into "hyperswitchSDK/CoreLite"
 copy_into "hyperswitchSDK/Shared"
 copy_into "hyperswitchSDK/AuthenticationModule"
 copy_into "frameworkgen/Frameworks/Core"
-copy_into "frameworkgen/Frameworks/Sentry"
 copy_into "frameworkgen/Frameworks/ReactNative"
 copy_into "frameworkgen/scanCard/Source"
 copy_into "frameworkgen/scanCard/Frameworks"
@@ -188,7 +187,7 @@ echo "    wrote $ZIP_ABS ($(du -h "$ZIP_ABS" | cut -f1))"
 # HyperOTA 0.0.8 is the newest published, and our frameworkgen Podfile's post_install does
 # not apply here because lint resolves those pods fresh.
 #
-# Measured under Xcode 27: core, common, sentry, scancard and netcetera3ds all pass -- only
+# Measured under Xcode 27: core, common, scancard and netcetera3ds all pass -- only
 # airborne and paypal fail. Neither is in default_subspec, nothing references paypal, and
 # airborne is pinned only by peachpayments_flutter_airborne, which is publish_to: none. So
 # this blocks releases on this machine, not merchants. The lint is deliberately NOT narrowed
