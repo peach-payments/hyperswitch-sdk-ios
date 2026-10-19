@@ -8,12 +8,13 @@
 import Foundation
 import React
 import WebKit
+import UIKit
 
 /// Extension on the PaymentSheet class to handle the creation of the React Native root view for the payment sheet.
 internal extension PaymentSheet {
 
     /// Method to get the root view for the payment sheet based on the configured properties.
-    func getRootView() -> RCTRootView {
+    func getRootView() -> UIView {
 
         let hyperswitchConfiguration = try? hyperswitchConfiguration?.toDictionary()
         let paymentSessionConfiguration = try? paymentSessionConfiguration.toDictionary()
@@ -42,7 +43,7 @@ internal extension PaymentSheet {
 
     /// Method to get the root view for the payment sheet with custom parameters.
     /// - Note: Used by Flutter and React Native Wrappers to send separate props.
-    func getRootViewWithParams(props: [String: Any]) -> RCTRootView {
+    func getRootViewWithParams(props: [String: Any]) -> UIView {
 
         let hyperswitchConfiguration = try? hyperswitchConfiguration?.toDictionary()
         let paymentSessionConfiguration = try? paymentSessionConfiguration.toDictionary()

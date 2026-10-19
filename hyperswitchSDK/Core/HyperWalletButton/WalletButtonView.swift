@@ -13,6 +13,8 @@
 //
 
 import Foundation
+import UIKit
+import React
 
 /// Shared plumbing for the standalone wallet button widgets. Not public: hosts
 /// use `ApplePayButton` or `ExpressCheckoutButton`.
@@ -23,7 +25,7 @@ public class WalletButtonBase: UIControl {
     private var configurationDict: [String: Any]?
     private let widgetType: String
     private var widgetReactTag: NSNumber?
-    private var rootView: RCTRootView?
+    private var rootView: UIView?
     private var completion: ((PaymentResult) -> Void)?
     private var subscribedEventNames: [String]?
     private var heightConstraint: NSLayoutConstraint?
@@ -118,7 +120,7 @@ public class WalletButtonBase: UIControl {
             "rootTag": self.widgetReactTag ?? -1,
             "actionType": "CONFIRM_WALLET_PAYMENT",
         ]
-        self.rootView?.bridge.enqueueJSCall(
+        RNViewManager.sharedInstance.bridge?.enqueueJSCall(
             "RCTDeviceEventEmitter",
             method: "emit",
             args: ["triggerWidgetAction", payload],

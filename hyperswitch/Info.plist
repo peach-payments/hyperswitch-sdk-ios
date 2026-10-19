@@ -16,7 +16,7 @@
 		</dict>
 	</array>
 	<key>HyperswitchSource</key>
-	<string>LocalHosted</string>
+	<string>LocalBundle</string>
 	<key>HyperswitchSourceIP</key>
 	<string></string>
 	<key>NSAppTransportSecurity</key>
@@ -30,6 +30,8 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>RCTNewArchEnabled</key>
+	<true/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>montserrat_thin.ttf</string>

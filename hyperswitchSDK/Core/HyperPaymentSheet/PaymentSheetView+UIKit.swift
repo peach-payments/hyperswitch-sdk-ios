@@ -7,6 +7,7 @@
 
 import Foundation
 import React
+import UIKit
 
 /// Extension on the PaymentSheet class to handle the presentation of the payment sheet view.
 internal extension PaymentSheet {
@@ -14,7 +15,7 @@ internal extension PaymentSheet {
     /// Method to present the payment sheet view with a given root view and completion handler.
     private func presentWithRootView(
         from presentingViewController: UIViewController,
-        rootView: RCTRootView,
+        rootView: UIView,
         completion: @escaping (PaymentResult) -> Void
     ) {
 
