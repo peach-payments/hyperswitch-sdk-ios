@@ -225,13 +225,24 @@ echo "    asset live at ${ASSET_URL}"
 # ----- 7b. Swift Package Manager assets ---------------------------------------------------------
 # One zip + checksum per xcframework, and Package.swift rewritten from path: to url:/checksum:.
 # SPM reads Package.swift from the TAG, so the rewrite has to be committed before the tag moves.
+# Non-fatal on purpose. spm-release.sh rewrites Package.swift from path: to url:, and that
+# rewrite is committed -- so on the next release there are no path: entries left and the
+# script exits non-zero. It used to abort the whole run here, leaving a GitHub Release
+# published but the podspecs unpushed: a half-released version nobody could resolve. The
+# pods are the product; SPM is additional, so a failure here must not block step 8.
 if [ "${SKIP_SPM:-0}" != "1" ]; then
     echo "==> Building SPM artifacts"
-    "${SCRIPT_DIR}/frameworkgen/scripts/spm-release.sh" "$VERSION" "$FORK_SLUG" "$TAG"
-    for zip_file in "${SCRIPT_DIR}"/spm-artifacts/*.xcframework.zip; do
-        gh release upload "$TAG" "$zip_file" --repo "$FORK_SLUG" --clobber
-    done
-    echo "    SPM binary targets uploaded to ${TAG}"
+    if "${SCRIPT_DIR}/frameworkgen/scripts/spm-release.sh" "$VERSION" "$FORK_SLUG" "$TAG"; then
+        for zip_file in "${SCRIPT_DIR}"/spm-artifacts/*.xcframework.zip; do
+            gh release upload "$TAG" "$zip_file" --repo "$FORK_SLUG" --clobber
+        done
+        echo "    SPM binary targets uploaded to ${TAG}"
+    else
+        echo "    WARNING: SPM artifacts skipped (spm-release.sh failed)."
+        echo "    Package.swift still points at the previous release, so Swift Package Manager"
+        echo "    consumers stay on it. CocoaPods is unaffected. Re-run spm-release.sh against a"
+        echo "    path-based Package.swift to restore SPM for ${VERSION}."
+    fi
 fi
 
 # ----- 8. remote gate + publish podspecs -------------------------------------------------------
