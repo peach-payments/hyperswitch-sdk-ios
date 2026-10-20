@@ -25,7 +25,6 @@ while IFS= read -r line; do
   [ -n "$line" ] && XCFS+=("$line")
 done < <(
   ls -d "${SCRIPT_DIR}"/frameworkgen/Frameworks/Core/*.xcframework \
-        "${SCRIPT_DIR}"/frameworkgen/Frameworks/Sentry/*.xcframework \
         "${SCRIPT_DIR}"/frameworkgen/Frameworks/ReactNative/*.xcframework 2>/dev/null
 )
 [ "${#XCFS[@]}" -gt 0 ] || { echo "ERROR: no xcframeworks found; run the frameworkgen build first." >&2; exit 1; }
@@ -62,9 +61,24 @@ def swap(m):
             f'            url: "{url}",\n'
             f'            checksum: "{checksums[name]}"\n        )')
 
-out, n = re.subn(r'\.binaryTarget\(name: "([^"]+)", path: "[^"]+"\)', swap, src)
+# Matches a binaryTarget in either form: the path: one a developer checks out with, and
+# the url:/checksum: one this script itself produces. The rewrite is committed so that SPM
+# can read it from the tag, which means the next release starts from the url: form -- a
+# path-only pattern matched nothing then, and the script aborted mid-release.
+pattern = re.compile(
+    r'\.binaryTarget\(\s*name:\s*"([^"]+)"\s*,\s*'
+    r'(?:path:\s*"[^"]*"'
+    r'|url:\s*"[^"]*"\s*,\s*checksum:\s*"[^"]*")\s*,?\s*\)',
+    re.S,
+)
+
+out, n = pattern.subn(swap, src)
 if n == 0:
-    raise SystemExit("ERROR: no path-based binaryTargets found -- already rewritten?")
+    raise SystemExit(
+        "ERROR: no binaryTargets matched in Package.swift. Expected either\n"
+        '  .binaryTarget(name: "X", path: "...")\n'
+        "or the url:/checksum: form this script writes."
+    )
 open(p, 'w').write(out)
 print(f"    rewrote {n} binaryTarget(s) to {tag}")
 PY
