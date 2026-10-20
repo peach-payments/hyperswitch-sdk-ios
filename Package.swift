@@ -3,35 +3,42 @@ import PackageDescription
 
 // Swift Package Manager distribution, alongside CocoaPods.
 //
-// The xcframeworks are referenced by path here, which works for a checked-out repo. Remote
-// consumption additionally needs a url + checksum per binaryTarget; build-lib.sh has to emit
-// one zip and one checksum per xcframework for that, which is tracked separately.
+// Each binaryTarget points at a per-xcframework zip on the GitHub release for its tag, with a
+// checksum. build-lib.sh emits those zips and rewrites the urls and checksums here as part of
+// cutting a release, so a merchant can depend on this package by version without a checkout.
 //
 // React Native 0.87 ships its core prebuilt, so React.xcframework and friends are vendored
 // rather than compiled. Building the React module needs the flattened <react/...>, <yoga/...>
 // and folly/glog/boost headers on an include path -- the same requirement the podspec has.
 // headerSearchPath may leave the target but not the package, which our layout satisfies.
 //
-// INCOMPLETE -- this manifest does not build yet, and cannot in its present shape.
+// React Native 0.87 ships its core prebuilt, so React.xcframework and friends are vendored
+// rather than compiled.
 //
-// React.framework's headers include RCTDeprecation/..., yoga/Yoga.h and six more BY PATH,
-// against a header tree that is deliberately not module-mapped. Building the React module
-// therefore raises -Werror=non-modular-include-in-framework-module, exactly as it does under
-// CocoaPods. The podspec suppresses it with OTHER_CFLAGS; SPM's only equivalent is
-// .unsafeFlags, which it forbids for packages consumed by version -- i.e. the way merchants
-// would add this one. Using it would make the package undependable.
+// Building the React module needs <react/...>, <yoga/...> and the folly/glog/boost headers
+// reachable, and React.framework's own headers include several of them BY PATH. Against a
+// loose header tree those includes are non-modular and raise
+// -Werror=non-modular-include-in-framework-module. The podspec suppresses that with
+// OTHER_CFLAGS; SPM's only equivalent is .unsafeFlags, which it forbids for packages consumed
+// by version -- the way merchants add this one -- so that route was closed. Making the loose
+// tree a module instead produced a React <-> headers cycle, since the tree's own headers
+// include <React/...>.
 //
-// The route out is to ship hyperswitchSDK/Core as a prebuilt xcframework, so a consumer never
-// builds the React module at all; ours already did. That needs a frameworkgen target which
-// does not exist today, and it costs module stability (BUILD_LIBRARY_FOR_DISTRIBUTION),
-// constraining which Swift versions merchants can build with. That trade is not ours to make
-// unilaterally, so it is left open.
+// Upstream's prebuilt tarball already solves it: alongside React.xcframework it ships
+// ReactNativeHeaders.xcframework, headers-only, carrying all 29 namespaces. Those headers are
+// modular because they belong to a real binary artifact, which is exactly what both failed
+// approaches lacked. CocoaPods cannot use it -- it refuses a vendored xcframework containing
+// static libraries, and the stub .a is what makes it work for SPM -- so the two distributions
+// take different artifacts from the same build: SPM the xcframework, CocoaPods the flattened
+// header tree.
 //
-// What is already settled and worth keeping: binaryTargets consume the vendored xcframeworks,
-// headerSearchPath may leave a target but not the package (our layout satisfies that), the
-// three Objective-C bridge shims are split into a sibling target because SPM has no
-// mixed-language targets, and the Swift sources no longer depend on hyper-Bridging-Header.h,
-// which SPM cannot provide.
+// The three Objective-C bridge shims live in a sibling target because SPM has no
+// mixed-language targets. There is no compile-time coupling in either direction: they register
+// Swift classes with the React Native bridge by name at runtime and none imports the generated
+// -Swift.h.
+//
+// binaryTarget urls and checksums are rewritten per release by build-lib.sh.
+
 let package = Package(
     name: "Hyperswitch",
     platforms: [.iOS(.v15)],
