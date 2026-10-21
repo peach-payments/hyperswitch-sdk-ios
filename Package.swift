@@ -48,53 +48,53 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "RNInAppBrowser",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.1/RNInAppBrowser.xcframework.zip",
-            checksum: "b8bd969e988c2b47fdcf794d70829ca9da75adcc18a66cb1f6dff2dee819f170"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/RNInAppBrowser.xcframework.zip",
+            checksum: "341ccaf4eb8274f33c262b564980d3124a57b728094348a80b224c8eb07b5ccc"
         ),
         .binaryTarget(
             name: "RNSVG",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.1/RNSVG.xcframework.zip",
-            checksum: "df0f2d107c955c4d12f5c453f856e4f430d3cd50815571aa693df054ec817bef"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/RNSVG.xcframework.zip",
+            checksum: "b92b6a086b9f89cbf26e5fd1177720dbdfd19780a1272096199610eb70209938"
         ),
         .binaryTarget(
             name: "React",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.1/React.xcframework.zip",
-            checksum: "6f9ec52071622d661e6d51babc7c3d96669c98293de787354c2675e35c7781c0"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/React.xcframework.zip",
+            checksum: "2da539a28f80affb80f08bdc0a90b677e5ab1c833f08ffde805f7df4bc131c6c"
         ),
         .binaryTarget(
             name: "ReactNativeHeaders",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.1/ReactNativeHeaders.xcframework.zip",
-            checksum: "e508345b5d3e98d7f473f97aa4a6daf8fe3de7c69a49fdf2592cce38cb806edb"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/ReactNativeHeaders.xcframework.zip",
+            checksum: "cac085f87f40709ee71fb3fdced6f48f3794c4e20de0e9317526f126dfd7859b"
         ),
         .binaryTarget(
             name: "ReactAppDependencyProvider",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.1/ReactAppDependencyProvider.xcframework.zip",
-            checksum: "5949e7e320cbdc7337cb0d79be2b24b1a765764e158386ef058a0dd7c8e0e4a1"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/ReactAppDependencyProvider.xcframework.zip",
+            checksum: "e7ad9e5d15295174cbc877421de6de1317514277a4602a2f23c8029b45fb9f46"
         ),
         .binaryTarget(
             name: "ReactCodegen",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.1/ReactCodegen.xcframework.zip",
-            checksum: "4a47366cf565a9b17d990135b401880d75b3fbd554ff49f1d1e91d2b5e3d94df"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/ReactCodegen.xcframework.zip",
+            checksum: "b1224844e8515b8bcf197324c7f8015d0cb695d39ae553bed9f2a20476450d61"
         ),
         .binaryTarget(
             name: "ReactNativeDependencies",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.1/ReactNativeDependencies.xcframework.zip",
-            checksum: "aa039f379aa9679726d2ad06c24036a3642dab860eded86e616bb7248744f35c"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/ReactNativeDependencies.xcframework.zip",
+            checksum: "5366757a957969c770d162ac1eea166fb8a23e098800590b6349f9562b741e5b"
         ),
         .binaryTarget(
             name: "React_Codegen",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.1/React_Codegen.xcframework.zip",
-            checksum: "285ee6b29015d25d596451732772a5b57c82cd81e9cee204e59b9e3d2c8c8530"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/React_Codegen.xcframework.zip",
+            checksum: "75b071213fac3f9dd838b339de90f168baebdd27bd30009d5684cb68f497d8a4"
         ),
         .binaryTarget(
             name: "hermesvm",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.1/hermesvm.xcframework.zip",
-            checksum: "55c4c6397db69438df97923ac70f616971e24cd8c8be3f5c336aaa15999f70fb"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/hermesvm.xcframework.zip",
+            checksum: "9fc818d26278ed8edb7562ab6de4da98eb16944f57f411d2a29f257f1a062853"
         ),
         .binaryTarget(
             name: "react_native_hyperswitch_netcetera_3ds",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.1/react_native_hyperswitch_netcetera_3ds.xcframework.zip",
-            checksum: "38e41d85d8b78ab8c80fc8e51bedc97ac288633807a30f63da345c197fbd10d9"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/react_native_hyperswitch_netcetera_3ds.xcframework.zip",
+            checksum: "afe61164345bbfb136e50c0315f36978cb6e8d2e84cefe1104ad60e9c4df4ee3"
         ),
         // SPM has no mixed-language targets, and Core carries three Objective-C React Native
         // bridge shims among its Swift. They are split out here rather than moved on disk, so
