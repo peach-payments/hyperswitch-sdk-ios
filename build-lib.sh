@@ -122,6 +122,36 @@ else
     done
 fi
 
+# ----- 3b. the core subspec must be self-contained ---------------------------------------------
+# Core is what peachpayments_flutter and every plain `pod '.../core'` integration gets. A
+# framework vendored here that links something shipped only by another subspec passes every
+# build and then kills the app at launch with
+# `dyld: Library not loaded: @rpath/<X>.framework/<X>`.
+#
+# That shipped in 0.8.0 through 0.8.2: framework.sh meant to keep the netcetera 3DS module out of
+# Core, but its exclusion list had stray commas and hyphens where the framework name has
+# underscores, so the module -- which links ThreeDS_SDK -- was vendored by core while ThreeDS_SDK
+# itself ships only in netcetera3ds. Three releases went out before a merchant reported it.
+echo "==> Checking core's vendored frameworks are self-contained"
+subspec_only_frameworks="ThreeDS_SDK HyperswitchScanCard"
+dangling=""
+for xc in frameworkgen/Frameworks/Core/*.xcframework; do
+    name=$(basename "$xc" .xcframework)
+    binary=$(find "$xc" -type f -name "$name" | head -1)
+    [ -n "$binary" ] || continue
+    for dep in $subspec_only_frameworks; do
+        if otool -L "$binary" 2>/dev/null | grep -q "/${dep}.framework/${dep}"; then
+            dangling="${dangling}\n    $name links $dep, which ships only in another subspec"
+        fi
+    done
+done
+if [ -n "$dangling" ]; then
+    printf "ERROR: core would ship a dangling link and crash at launch:%b\n" "$dangling"
+    echo "    Fix frameworkgen/scripts/framework.sh so the framework lands in its own subspec."
+    exit 1
+fi
+echo "    core is self-contained"
+
 # ----- 4. fetch the non-reproducible vendored xcframeworks ------------------------------------
 # ThreeDS_SDK + HyperswitchScanCard are vendored binaries; pull them from the vendor-frameworks
 # release if they are not already present on disk.

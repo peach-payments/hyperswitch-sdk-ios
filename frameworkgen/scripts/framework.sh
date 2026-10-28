@@ -5,7 +5,23 @@ export SRCROOT
 
 set -euo pipefail
 
-excluded_frameworks=("Pods_DummyApp" "DummyApp", "react-native-hyperswitch-netcetera-3ds", "react_native_hyperswitch_scancard")
+# Bash splits array elements on whitespace, so the commas that used to be in this list became
+# part of the strings: the elements were literally `DummyApp,` and
+# `react-native-hyperswitch-netcetera-3ds,`. The membership test below is a space-delimited
+# substring match, so neither could ever match and both frameworks fell through to the else
+# branch into Frameworks/Core. The netcetera entry was wrong twice over -- the framework is
+# built as react_native_hyperswitch_netcetera_3ds, with underscores.
+#
+# That is how a framework linking @rpath/ThreeDS_SDK.framework/ThreeDS_SDK ended up vendored by
+# the core subspec while ThreeDS_SDK itself ships only in netcetera3ds, killing any app on core
+# alone at launch. The netcetera3ds subspec builds this module from frameworkgen/3ds/Source
+# instead, so the prebuilt framework is redundant as well as harmful.
+excluded_frameworks=(
+  "Pods_DummyApp"
+  "DummyApp"
+  "react_native_hyperswitch_netcetera_3ds"
+  "react_native_hyperswitch_scancard"
+)
 # Sentry has been removed from the SDK.
 sentry_frameworks=()
 paypal_frameworks=("PayPal" "ReactNativeHyperswitchPaypal")
