@@ -51,6 +51,15 @@ let package = Package(
         .library(name: "Hyperswitch", targets: ["Hyperswitch", "HyperswitchObjC"])
     ],
     targets: [
+        // The JavaScript bundle the payment sheet runs, packaged as a framework so it can
+        // travel as a binary artifact. CocoaPods ships it through `core.resources` out of the
+        // pod archive; SPM takes package source from the git tag, where a build artifact like
+        // this one is not committed, so without this the package resolved and compiled and
+        // then had no JavaScript to run. Built by frameworkgen/scripts/js-bundle-xcframework.sh.
+        .binaryTarget(
+            name: "HyperswitchJS",
+            path: "frameworkgen/Frameworks/ReactNative/HyperswitchJS.xcframework"
+        ),
         .binaryTarget(
             name: "RNInAppBrowser",
             url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.3/RNInAppBrowser.xcframework.zip",
@@ -124,6 +133,12 @@ let package = Package(
                 "ReactNativeDependencies",
                 "React_Codegen",
                 "hermesvm",
+                "HyperswitchJS",
+                // Carries the React_RCTAppDelegate module. React.framework ships
+                // RCTReactNativeFactory.h and friends in its Headers but leaves them out of its
+                // umbrella, so `import React` never exposes them to Swift and the package could
+                // not compile. CocoaPods gets them from the separate React-RCTAppDelegate pod.
+                "ReactNativeHeaders",
             ],
             path: "hyperswitchSDK",
             exclude: [

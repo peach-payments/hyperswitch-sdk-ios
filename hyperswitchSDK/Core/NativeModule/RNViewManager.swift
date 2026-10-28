@@ -7,6 +7,15 @@
 
 import Foundation
 import React
+// CocoaPods pulls these in through the React-RCTAppDelegate and ReactAppDependencyProvider
+// pods. Swift Package Manager has no equivalent: React.framework ships
+// RCTReactNativeFactory.h and friends in its Headers but leaves them out of its umbrella
+// header, so `import React` does not expose them and the package failed to compile. The
+// ReactNativeHeaders artifact declares them as the React_RCTAppDelegate module.
+#if SWIFT_PACKAGE
+import React_RCTAppDelegate
+import ReactAppDependencyProvider
+#endif
 
 internal class RNViewManager: NSObject {
 
@@ -66,8 +75,39 @@ internal class HyperswitchFactoryDelegate: RCTDefaultReactNativeFactoryDelegate 
             #if canImport(HyperOTA)
             return OTAServices.shared.getBundleURL()
             #else
-            return Bundle(for: RNViewManager.self).url(forResource: "hyperswitch", withExtension: "bundle")
+            return HyperswitchJSBundle.url()
+                ?? Bundle(for: RNViewManager.self).url(forResource: "hyperswitch", withExtension: "bundle")
             #endif
         }
+    }
+}
+
+/// Locates `hyperswitch.bundle`, the JavaScript the payment sheet runs.
+///
+/// CocoaPods and Swift Package Manager put it in different places, and neither finds the
+/// other's. CocoaPods declares it in `core.resources`, so it lands next to the class and
+/// `Bundle(for:)` finds it. SPM cannot ship it that way -- it takes package source from the
+/// git tag, and the bundle is a build artifact that is not committed -- so it travels as a
+/// binary target instead, HyperswitchJS.xcframework, which Xcode embeds under the app's
+/// Frameworks directory. `Bundle(for:)` never looks there, which is why an SPM build used to
+/// resolve, compile, and then sit on a sheet with no JavaScript behind it.
+internal enum HyperswitchJSBundle {
+    static func url() -> URL? {
+        #if SWIFT_PACKAGE
+        if let embedded = Bundle.main.url(
+            forResource: "hyperswitch",
+            withExtension: "bundle",
+            subdirectory: "Frameworks/HyperswitchJS.framework"
+        ) {
+            return embedded
+        }
+        // The framework is linked, so it is loaded; ask it directly in case the app embeds
+        // frameworks somewhere other than the default location.
+        if let fw = Bundle(identifier: "io.peachpayments.HyperswitchJS"),
+           let inside = fw.url(forResource: "hyperswitch", withExtension: "bundle") {
+            return inside
+        }
+        #endif
+        return nil
     }
 }

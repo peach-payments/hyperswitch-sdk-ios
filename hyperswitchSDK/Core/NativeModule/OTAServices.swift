@@ -111,7 +111,7 @@ public final class OTAServices {
         }
     }
     public func getBundleURL() -> URL? {
-        return otaServices?.bundleURL() ?? Bundle(for: OTAServices.self).url(forResource: "hyperswitch", withExtension: "bundle")
+        return otaServices?.bundleURL() ?? HyperswitchJSBundle.url() ?? Bundle(for: OTAServices.self).url(forResource: "hyperswitch", withExtension: "bundle")
     }
 }
 #endif

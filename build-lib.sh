@@ -122,6 +122,13 @@ else
     done
 fi
 
+# ----- 3a. package the JS bundle for Swift Package Manager -------------------------------------
+# CocoaPods ships hyperswitch.bundle via core.resources, out of the pod archive. SPM takes
+# package source from the git tag, where this build artifact is not committed, so it needs the
+# bundle as a binary artifact instead. Must run after the bundle is built, and before
+# spm-release.sh, which zips every xcframework under Frameworks/Core and Frameworks/ReactNative.
+"${SCRIPT_DIR}/frameworkgen/scripts/js-bundle-xcframework.sh"
+
 # ----- 3b. the core subspec must be self-contained ---------------------------------------------
 # Core is what peachpayments_flutter and every plain `pod '.../core'` integration gets. A
 # framework vendored here that links something shipped only by another subspec passes every

@@ -41,7 +41,7 @@ extension RNHeadlessManager: RCTBridgeDelegate {
         case "LocalHosted":
             return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
         default:
-            return Bundle(for: RNHeadlessManager.self).url(forResource: "hyperswitch", withExtension: "bundle")
+            return HyperswitchJSBundle.url() ?? Bundle(for: RNHeadlessManager.self).url(forResource: "hyperswitch", withExtension: "bundle")
         }
     }
 }
