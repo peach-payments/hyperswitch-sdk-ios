@@ -291,4 +291,29 @@ for podspec in "${PODSPECS[@]}"; do
 done
 
 rm -f "$ZIP_ABS"
+cat <<EOF
+
+================================================================================
+NOT DONE YET -- Swift Package Manager still points at the previous release.
+
+spm-release.sh rewrote Package.swift in the working tree, but \`gh release create\`
+tagged ${TAG} at the remote's HEAD, which is the commit BEFORE that rewrite. SPM
+reads Package.swift from the TAG, so until the rewrite is committed and the tag
+moved, anyone depending on ${VERSION} resolves the previous version's URLs.
+CocoaPods is unaffected -- it fetches the release asset, which is already correct.
+
+Run:
+
+  git add Package.swift hyperswitchSDK/Shared/Version.swift *.podspec
+  git commit -m "chore: record the ${VERSION} release artefacts"
+  git fetch origin && git merge --ff-only origin/main   # pick up the pod repo push commits
+  git tag -f ${TAG} HEAD
+  git push origin main && git push origin -f ${TAG}
+
+Then confirm a consumer resolves it:
+
+  swift package resolve   # in a scratch package depending on ${VERSION}
+================================================================================
+
+EOF
 echo "Publish complete — pods ${VERSION} live via ${FORK_SLUG} (Release ${TAG} + spec repo ${SPEC_REPO_NAME})."
