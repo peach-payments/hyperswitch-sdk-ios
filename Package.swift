@@ -42,59 +42,59 @@ import PackageDescription
 let package = Package(
     name: "Hyperswitch",
     platforms: [.iOS(.v15)],
+    // The Netcetera 3DS module is deliberately absent. It links ThreeDS_SDK, which is a separate
+    // vendored framework, and CocoaPods ships that pairing as the netcetera3ds subspec rather than
+    // in core. Keeping it out of a binaryTarget here matches core: a single product that links
+    // only what it also ships. Vendoring it without ThreeDS_SDK is what crashed apps at launch in
+    // 0.8.0-0.8.2.
     products: [
         .library(name: "Hyperswitch", targets: ["Hyperswitch", "HyperswitchObjC"])
     ],
     targets: [
         .binaryTarget(
             name: "RNInAppBrowser",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/RNInAppBrowser.xcframework.zip",
-            checksum: "341ccaf4eb8274f33c262b564980d3124a57b728094348a80b224c8eb07b5ccc"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.3/RNInAppBrowser.xcframework.zip",
+            checksum: "67a67dca4f5fa8deb867ef9a0e18b58bc9170ed6dbb8ca3faf9147a4466edc39"
         ),
         .binaryTarget(
             name: "RNSVG",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/RNSVG.xcframework.zip",
-            checksum: "b92b6a086b9f89cbf26e5fd1177720dbdfd19780a1272096199610eb70209938"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.3/RNSVG.xcframework.zip",
+            checksum: "92011c04789b3342e8daf595b6551467d88b01b9e3af8d8a877d8d6d7b1cdc36"
         ),
         .binaryTarget(
             name: "React",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/React.xcframework.zip",
-            checksum: "2da539a28f80affb80f08bdc0a90b677e5ab1c833f08ffde805f7df4bc131c6c"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.3/React.xcframework.zip",
+            checksum: "7d16611e214b4e2451b1a66b919d0583ea6561d18148f23975630815a0014abf"
         ),
         .binaryTarget(
             name: "ReactNativeHeaders",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/ReactNativeHeaders.xcframework.zip",
-            checksum: "cac085f87f40709ee71fb3fdced6f48f3794c4e20de0e9317526f126dfd7859b"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.3/ReactNativeHeaders.xcframework.zip",
+            checksum: "18e19f5590cb2a51264570edf4a0b4ff976d33e74051423702c1e42ddf20f9a3"
         ),
         .binaryTarget(
             name: "ReactAppDependencyProvider",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/ReactAppDependencyProvider.xcframework.zip",
-            checksum: "e7ad9e5d15295174cbc877421de6de1317514277a4602a2f23c8029b45fb9f46"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.3/ReactAppDependencyProvider.xcframework.zip",
+            checksum: "f3e8a87ac3aa97ebc1764b4d5f268fdd622bdc08e81370a446463a9f49f3a3bf"
         ),
         .binaryTarget(
             name: "ReactCodegen",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/ReactCodegen.xcframework.zip",
-            checksum: "b1224844e8515b8bcf197324c7f8015d0cb695d39ae553bed9f2a20476450d61"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.3/ReactCodegen.xcframework.zip",
+            checksum: "7fde8dd899cf1d1dd3c8bdc397d0d9c819ba0ef5b682e5b82de219377b438f8f"
         ),
         .binaryTarget(
             name: "ReactNativeDependencies",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/ReactNativeDependencies.xcframework.zip",
-            checksum: "5366757a957969c770d162ac1eea166fb8a23e098800590b6349f9562b741e5b"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.3/ReactNativeDependencies.xcframework.zip",
+            checksum: "07044009fafc8162d73b575769ed4979adc86a1f151369a2ffcd287634cdd982"
         ),
         .binaryTarget(
             name: "React_Codegen",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/React_Codegen.xcframework.zip",
-            checksum: "75b071213fac3f9dd838b339de90f168baebdd27bd30009d5684cb68f497d8a4"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.3/React_Codegen.xcframework.zip",
+            checksum: "8f755db811143bed40eee4c547d3a934ce3f84b17a20c47aa4e4fe6a6db20085"
         ),
         .binaryTarget(
             name: "hermesvm",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/hermesvm.xcframework.zip",
-            checksum: "9fc818d26278ed8edb7562ab6de4da98eb16944f57f411d2a29f257f1a062853"
-        ),
-        .binaryTarget(
-            name: "react_native_hyperswitch_netcetera_3ds",
-            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.2/react_native_hyperswitch_netcetera_3ds.xcframework.zip",
-            checksum: "afe61164345bbfb136e50c0315f36978cb6e8d2e84cefe1104ad60e9c4df4ee3"
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/v0.8.3/hermesvm.xcframework.zip",
+            checksum: "e39a0593aa9d182c82c8dd39f4d765d7798e995173a9075b64743d55aed89e73"
         ),
         // SPM has no mixed-language targets, and Core carries three Objective-C React Native
         // bridge shims among its Swift. They are split out here rather than moved on disk, so
@@ -124,7 +124,6 @@ let package = Package(
                 "ReactNativeDependencies",
                 "React_Codegen",
                 "hermesvm",
-                "react_native_hyperswitch_netcetera_3ds",
             ],
             path: "hyperswitchSDK",
             exclude: [

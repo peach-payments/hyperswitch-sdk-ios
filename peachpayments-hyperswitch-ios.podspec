@@ -1,4 +1,4 @@
-version = "0.8.2"
+version = "0.8.3"
 
 Pod::Spec.new do |s|
   s.name                      = 'peachpayments-hyperswitch-ios'
@@ -110,18 +110,22 @@ Pod::Spec.new do |s|
     netcetera3ds.dependency 'peachpayments-hyperswitch-ios/core'
   end
 
-  s.subspec 'airborne' do |airborne|
-    airborne.dependency 'HyperOTA', '0.0.8'
-    airborne.dependency 'peachpayments-hyperswitch-ios/core'
-  end
-
-  s.subspec 'paypal' do |paypal|
-    paypal.source_files = 'frameworkgen/paypal/Source/**/*.{h,m,mm,swift}'
-    paypal.dependency "PayPal/CardPayments", "~> 2.0"
-    paypal.dependency "PayPal/PaymentButtons", "~> 2.0"
-    paypal.dependency "PayPal/PayPalWebPayments", "~> 2.0"   
-    paypal.dependency 'peachpayments-hyperswitch-ios/core'
-  end
+  # The 'airborne' and 'paypal' subspecs were removed in 0.8.3.
+  #
+  # Both pinned dependencies that declare deployment targets Xcode 27 no longer accepts --
+  # HyperOTA at iOS 12.0, PayPal 2.x at iOS 14.0, against a floor of 15.0 -- so `pod lib lint`
+  # failed on them and no release could be cut. An app build was unaffected, because this repo's
+  # Podfile raises those targets in post_install, but lint builds in its own sandbox and never
+  # sees it, and a podspec cannot raise a dependency's deployment target. HyperOTA 0.0.8 is still
+  # the newest published version, so there was nothing to upgrade to.
+  #
+  # Neither was reachable in practice: paypal was referenced by nothing, airborne only by
+  # peachpayments_flutter_airborne, which is publish_to: none. Neither was in default_subspec, so
+  # no merchant got either without asking for it by name.
+  #
+  # The OTA code paths in the SDK are guarded by `#if canImport(HyperOTA)` and simply take their
+  # else branch now. frameworkgen/paypal/Source is left in the tree; restoring either subspec is
+  # a podspec edit once the upstream pods ship supported deployment targets.
 
   s.subspec 'common' do |common|
     common.source_files = 'hyperswitchSDK/Shared/**/*.{m,swift,h}'
