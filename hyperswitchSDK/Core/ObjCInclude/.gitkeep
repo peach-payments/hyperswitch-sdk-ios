@@ -1,0 +1,10 @@
+This directory is intentionally empty.
+
+HyperswitchObjC declares it as publicHeadersPath. The target's three Objective-C files are
+React Native bridge shims that register Swift classes by name at runtime, so nothing needs to
+be exposed as a public header -- but Swift Package Manager still requires the directory to
+exist, and git does not track empty directories. Without this file the directory is absent
+from the release tag and Xcode fails to resolve the package with:
+
+    public headers ("include") directory path for 'HyperswitchObjC' is invalid
+    or not contained in the target
