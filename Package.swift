@@ -42,13 +42,23 @@ import PackageDescription
 let package = Package(
     name: "Hyperswitch",
     platforms: [.iOS(.v15)],
-    // The Netcetera 3DS module is deliberately absent. It links ThreeDS_SDK, which is a separate
-    // vendored framework, and CocoaPods ships that pairing as the netcetera3ds subspec rather than
-    // in core. Keeping it out of a binaryTarget here matches core: a single product that links
-    // only what it also ships. Vendoring it without ThreeDS_SDK is what crashed apps at launch in
-    // 0.8.0-0.8.2.
+    // One product per CocoaPods subspec a merchant can ask for: core, netcetera3ds, scancard.
+    //
+    // Each optional product carries its own vendored binary, exactly as its subspec does, so core
+    // never links a framework it does not ship. The Netcetera 3DS module links ThreeDS_SDK;
+    // vendoring the module without ThreeDS_SDK is what crashed apps at launch in 0.8.0-0.8.2. Here
+    // the bridge and ThreeDS_SDK are in the same product, so neither can be installed without the
+    // other, and an app that adds only Hyperswitch gets neither.
     products: [
-        .library(name: "Hyperswitch", targets: ["Hyperswitch", "HyperswitchObjC"])
+        .library(name: "Hyperswitch", targets: ["Hyperswitch", "HyperswitchObjC"]),
+        .library(
+            name: "HyperswitchNetcetera3DS",
+            targets: ["HyperswitchNetcetera3dsBridge", "HyperswitchNetcetera3dsBridgeObjC", "ThreeDS_SDK"]
+        ),
+        .library(
+            name: "HyperswitchScanCard",
+            targets: ["HyperswitchScancardBridge", "HyperswitchScancardBridgeObjC", "HyperswitchScanCard"]
+        ),
     ],
     targets: [
         // The JavaScript bundle the payment sheet runs, packaged as a framework so it can
@@ -151,6 +161,82 @@ let package = Package(
                 "Core/ObjCInclude"
             ],
             sources: ["Core", "Shared"]
-        )
+        ),
+
+        // ----- netcetera3ds -------------------------------------------------------------------
+        // ThreeDS_SDK and HyperswitchScanCard are vendored, not built here, and do not change between
+        // SDK releases. They are referenced from the `vendor-frameworks` release -- the same zips
+        // build-lib.sh's ensure_vendored puts into the pod archive -- rather than re-uploaded with
+        // every version, so spm-release.sh leaves these two url:s alone.
+        //
+        // They must never be path: targets. The xcframeworks are gitignored, so a path: target is
+        // absent from every checkout and tag, and SwiftPM then refuses to resolve the WHOLE package
+        // -- core-only users included -- with "does not contain a binary artifact".
+        //
+        // NEVER replace an asset on the vendor-frameworks release (no --clobber): the checksums
+        // below would stop matching and every SPM consumer would fail to resolve. A new vendored
+        // version goes on a new release tag, with the url and checksum updated here.
+        .binaryTarget(
+            name: "ThreeDS_SDK",
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/vendor-frameworks/ThreeDS_SDK.xcframework.zip",
+            checksum: "b3d8c334e2b9f125decc98ac67e66b57196bca59f4894e17ad57d9e359387083"
+        ),
+        // Same split as Hyperswitch / HyperswitchObjC: SPM has no mixed-language targets, and the
+        // .m is a React Native bridge shim that registers the Swift class by name at runtime.
+        // The sources stay where the podspec globs them, so CocoaPods is unchanged.
+        .target(
+            name: "HyperswitchNetcetera3dsBridgeObjC",
+            dependencies: ["React", "ReactNativeHeaders", "ReactNativeDependencies", "hermesvm"],
+            path: "frameworkgen/3ds/Source",
+            sources: ["HyperswitchNetcetera3ds.m"],
+            publicHeadersPath: "ObjCInclude"
+        ),
+        // Depends on Hyperswitch although no source imports it, mirroring the podspec, where
+        // netcetera3ds and scancard depend on core. The bridge is only ever called by core's JS
+        // bundle, so adding this product alone must still bring core in. The scancard bridge below
+        // follows suit.
+        .target(
+            name: "HyperswitchNetcetera3dsBridge",
+            dependencies: [
+                "Hyperswitch",
+                "React",
+                "ReactNativeHeaders",
+                "ReactNativeDependencies",
+                "hermesvm",
+                "ThreeDS_SDK",
+            ],
+            path: "frameworkgen/3ds/Source",
+            exclude: ["HyperswitchNetcetera3ds.m", "HyperswitchNetcetera3ds-Bridging-Header.h", "ObjCInclude"],
+            sources: ["HyperswitchNetcetera3ds.swift", "HyperswitchChallengeManager.swift"]
+        ),
+
+        // ----- scancard -----------------------------------------------------------------------
+        // From the vendor-frameworks release; see ThreeDS_SDK above.
+        .binaryTarget(
+            name: "HyperswitchScanCard",
+            url: "https://github.com/peach-payments/hyperswitch-sdk-ios/releases/download/vendor-frameworks/HyperswitchScanCard.xcframework.zip",
+            checksum: "461a17b8b2d75a0f176875ffdd27beac70e8dfa93d49e4fb8bcef278cbca8d51"
+        ),
+        .target(
+            name: "HyperswitchScancardBridgeObjC",
+            dependencies: ["React", "ReactNativeHeaders", "ReactNativeDependencies", "hermesvm"],
+            path: "frameworkgen/scanCard/Source",
+            sources: ["HyperswitchScancard.m"],
+            publicHeadersPath: "ObjCInclude"
+        ),
+        .target(
+            name: "HyperswitchScancardBridge",
+            dependencies: [
+                "Hyperswitch",
+                "React",
+                "ReactNativeHeaders",
+                "ReactNativeDependencies",
+                "hermesvm",
+                "HyperswitchScanCard",
+            ],
+            path: "frameworkgen/scanCard/Source",
+            exclude: ["HyperswitchScancard.m", "HyperswitchScancard-Bridging-Header.h", "ObjCInclude"],
+            sources: ["HyperswitchScancard.swift"]
+        ),
     ]
 )

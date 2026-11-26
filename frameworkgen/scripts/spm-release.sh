@@ -18,8 +18,12 @@ OUT="${SCRIPT_DIR}/spm-artifacts"
 
 rm -rf "$OUT"; mkdir -p "$OUT"
 
-# Every xcframework a Package.swift binaryTarget references.
+# Every xcframework this release builds, i.e. every binaryTarget that moves with the version.
 # macOS ships bash 3.2, which has no mapfile/readarray.
+# Not listed: ThreeDS_SDK and HyperswitchScanCard. They are vendored, unchanged between releases,
+# and Package.swift references them on the vendor-frameworks release, so the rewrite below leaves
+# their url: entries as they are.
+# (Keep comments out of the process substitution below: bash 3.2 misparses quotes inside it.)
 XCFS=()
 while IFS= read -r line; do
   [ -n "$line" ] && XCFS+=("$line")
@@ -52,9 +56,17 @@ checksums = dict(zip(names, sums))
 p = f"{root}/Package.swift"
 src = open(p).read()
 
+kept = []
+
 def swap(m):
     name = m.group(1)
     if name not in checksums:
+        # Vendored binaries live on the fixed vendor-frameworks release and are not rebuilt,
+        # so their url:/checksum: stays as committed. Anything else without a checksum is a
+        # target this release forgot to build.
+        if "/releases/download/vendor-frameworks/" in m.group(0):
+            kept.append(name)
+            return m.group(0)
         raise SystemExit(f"ERROR: binaryTarget '{name}' has no built xcframework/checksum.")
     url = f"https://github.com/{slug}/releases/download/{tag}/{name}.xcframework.zip"
     return (f'.binaryTarget(\n            name: "{name}",\n'
@@ -79,8 +91,14 @@ if n == 0:
         '  .binaryTarget(name: "X", path: "...")\n'
         "or the url:/checksum: form this script writes."
     )
+# Hard guard: a path: binaryTarget must never reach a tag. The xcframeworks are gitignored, so
+# SwiftPM finds no artifact at that path and refuses to resolve the entire package -- core-only
+# consumers included -- with "local binary target ... does not contain a binary artifact".
+leftover = re.findall(r'\.binaryTarget\(\s*name:\s*"([^"]+)"\s*,\s*path:', out)
+if leftover:
+    raise SystemExit("ERROR: path: binaryTargets would ship in the tag: " + ", ".join(leftover))
 open(p, 'w').write(out)
-print(f"    rewrote {n} binaryTarget(s) to {tag}")
+print(f"    rewrote {n - len(kept)} binaryTarget(s) to {tag}; kept {len(kept)} vendored: {', '.join(kept) or 'none'}")
 PY
 
 echo "    SPM assets in ${OUT} -- upload them to release ${TAG} alongside the pod zip."

@@ -1,0 +1,7 @@
+This directory is intentionally empty.
+
+HyperswitchScancardBridgeObjC declares it as publicHeadersPath in Package.swift. The target's
+Objective-C file is a React Native bridge shim that registers a Swift class by name at runtime,
+so nothing needs to be exposed as a public header -- but Swift Package Manager still requires
+the directory to exist, and git does not track empty directories. See
+hyperswitchSDK/Core/ObjCInclude/.gitkeep for the failure this prevents.

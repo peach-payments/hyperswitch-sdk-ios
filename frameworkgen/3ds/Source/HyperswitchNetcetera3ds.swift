@@ -6,9 +6,16 @@
 //
 
 import Foundation
+import React
+import UIKit
 import ThreeDS_SDK
 
+// @usableFromInline gives this class public linkage without making it public API. Under SPM
+// its Objective-C bridge shim is a separate target (SPM has no mixed-language targets), and in
+// Release builds an internal class is emitted hidden, so the shim fails to link with
+// "Undefined symbols: _OBJC_CLASS_$_<name>". Debug builds and CocoaPods never showed it.
 @objc(HyperswitchNetcetera3ds)
+@usableFromInline
 class HyperswitchNetcetera3ds: NSObject {
     private let challengeStatusReceiver: HyperswitchChallengeManager = HyperswitchChallengeManager()
 

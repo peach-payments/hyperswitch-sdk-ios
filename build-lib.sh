@@ -127,6 +127,8 @@ fi
 # package source from the git tag, where this build artifact is not committed, so it needs the
 # bundle as a binary artifact instead. Must run after the bundle is built, and before
 # spm-release.sh, which zips every xcframework under Frameworks/Core and Frameworks/ReactNative.
+# (ThreeDS_SDK and HyperswitchScanCard are not zipped per release: Package.swift takes them from
+# the vendor-frameworks release.)
 "${SCRIPT_DIR}/frameworkgen/scripts/js-bundle-xcframework.sh"
 
 # ----- 3b. the core subspec must be self-contained ---------------------------------------------
@@ -262,11 +264,14 @@ echo "    asset live at ${ASSET_URL}"
 # ----- 7b. Swift Package Manager assets ---------------------------------------------------------
 # One zip + checksum per xcframework, and Package.swift rewritten from path: to url:/checksum:.
 # SPM reads Package.swift from the TAG, so the rewrite has to be committed before the tag moves.
-# Non-fatal on purpose. spm-release.sh rewrites Package.swift from path: to url:, and that
-# rewrite is committed -- so on the next release there are no path: entries left and the
-# script exits non-zero. It used to abort the whole run here, leaving a GitHub Release
-# published but the podspecs unpushed: a half-released version nobody could resolve. The
-# pods are the product; SPM is additional, so a failure here must not block step 8.
+# Non-fatal on purpose. A failure here once aborted the whole run, leaving a GitHub Release
+# published but the podspecs unpushed: a half-released version nobody could resolve. The pods
+# are the product; SPM is additional, so a failure here must not block step 8.
+#
+# A failure is safe for SPM consumers: spm-release.sh only writes Package.swift once every
+# check has passed, so the committed manifest keeps the previous release's url:s (all
+# resolvable). It refuses outright to leave a path: binaryTarget, which would break resolution
+# of the whole package for everyone.
 if [ "${SKIP_SPM:-0}" != "1" ]; then
     echo "==> Building SPM artifacts"
     if "${SCRIPT_DIR}/frameworkgen/scripts/spm-release.sh" "$VERSION" "$FORK_SLUG" "$TAG"; then
@@ -276,9 +281,10 @@ if [ "${SKIP_SPM:-0}" != "1" ]; then
         echo "    SPM binary targets uploaded to ${TAG}"
     else
         echo "    WARNING: SPM artifacts skipped (spm-release.sh failed)."
-        echo "    Package.swift still points at the previous release, so Swift Package Manager"
-        echo "    consumers stay on it. CocoaPods is unaffected. Re-run spm-release.sh against a"
-        echo "    path-based Package.swift to restore SPM for ${VERSION}."
+        echo "    Package.swift is unchanged and still points at the previous release, so Swift"
+        echo "    Package Manager consumers stay on it. CocoaPods is unaffected. Fix the error above,"
+        echo "    then re-run: frameworkgen/scripts/spm-release.sh ${VERSION} ${FORK_SLUG} ${TAG}"
+        echo "    and upload spm-artifacts/*.zip to ${TAG} before the commit-and-retag step below."
     fi
 fi
 
