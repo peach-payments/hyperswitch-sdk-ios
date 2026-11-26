@@ -9,7 +9,12 @@ import Foundation
 import React
 import WebKit
 
+// @usableFromInline gives this class public linkage without making it public API. Under SPM
+// its Objective-C bridge shim is a separate target (SPM has no mixed-language targets), and in
+// Release builds an internal class is emitted hidden, so the shim fails to link with
+// "Undefined symbols: _OBJC_CLASS_$_<name>". Debug builds and CocoaPods never showed it.
 @objc(HyperHeadless)
+@usableFromInline
 internal class HyperHeadless: RCTEventEmitter {
 
     internal static var shared: HyperHeadless?
